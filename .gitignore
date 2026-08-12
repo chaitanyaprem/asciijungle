@@ -1,0 +1,7 @@
+node_modules/
+
+# Audio is fetched locally, not shipped. The BBC Sound Effects clips are
+# licensed for personal and educational use only and must not be redistributed;
+# keeping the directory out of git makes that hard to get wrong by accident.
+sounds/*
+!sounds/README.md

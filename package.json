@@ -1,0 +1,17 @@
+{
+  "name": "asciijungle",
+  "version": "0.2.0",
+  "description": "A 3D-ish ASCII jungle for very small people",
+  "main": "asciijungle.js",
+  "bin": { "asciijungle": "./asciijungle.js" },
+  "scripts": {
+    "start": "./asciijungle.js",
+    "check": "node -c asciijungle.js && for f in src/*.js src/animals/*.js; do node -c \"$f\" || exit 1; done && echo ok",
+    "sounds": "./tools/fetch-sounds.sh"
+  },
+  "keywords": ["ascii", "terminal", "animation", "jungle", "animals", "kids"],
+  "author": "Prem <chaitanyaprem@gmail.com>",
+  "license": "GPL-2.0-or-later",
+  "type": "commonjs",
+  "engines": { "node": ">=14" }
+}
