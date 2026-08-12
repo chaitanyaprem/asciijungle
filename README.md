@@ -133,7 +133,8 @@ src/
   artkit.js          mirror / shiftRow / spliceRow / unsign
   sound.js           audio player discovery, cooldown, playback
   random.js          animal registry and population cap
-  animals/           elephant.js, giraffe.js, panda.js
+  animals/           one module per species (elephant, giraffe, panda,
+                     lion, monkey, hedgehog, crocodile)
 ```
 
 `engine.js`, `colors.js` and the terminal bootstrap are lifted from

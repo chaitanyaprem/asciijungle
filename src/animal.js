@@ -92,10 +92,49 @@ function spawn(anim, spec, opts = {}) {
   const willAct = featureX != null &&
     Math.random() < (spec.actChance != null ? spec.actChance : 0.75);
 
+  // Stop column for a given facing. Anchors are in the act pose; featureOffset
+  // nudges the whole animal sideways from the landmark (panda beside bamboo,
+  // lion in the shade rather than inside the trunk).
+  function stopFor(faceR) {
+    if (!willAct) return null;
+    const walkW = artFor(prepared, WALK, faceR).frames[0].width;
+    const anchor = faceR
+      ? (spec.anchorRight != null ? spec.anchorRight : Math.floor(walkW / 2))
+      : (spec.anchorLeft != null ? spec.anchorLeft : Math.floor(walkW / 2));
+    return featureX - anchor + (spec.featureOffset || 0);
+  }
+
+  // How many columns of approach remain on this side of stopX (negative = the
+  // stop is unreachable without walking backwards or off-screen).
+  function approachRoom(faceR, stop, walkW, margin) {
+    if (stop == null) return 0;
+    const gap = walkW + 2;
+    if (faceR) return stop - gap - margin;
+    return (anim.width() - walkW - margin) - (stop + gap);
+  }
+
   let facingRight;
-  if (opts.facingRight != null) facingRight = opts.facingRight;
-  else if (willAct) facingRight = featureX > anim.width() / 2;
-  else facingRight = Math.random() < 0.5;
+  if (opts.facingRight != null) {
+    facingRight = opts.facingRight;
+  } else if (willAct) {
+    // Default: come from the far side of the feature. Then flip if anchors or
+    // featureOffset left no approach room on that side (lion's +15 shade
+    // offset was the known case — mid-screen tree, stop pushed right, facing
+    // left, and startX had nowhere to go).
+    const margin0 = Math.max(2, Math.floor(anim.width() * 0.08));
+    const preferRight = featureX > anim.width() / 2;
+    const wR = artFor(prepared, WALK, true).frames[0].width;
+    const wL = artFor(prepared, WALK, false).frames[0].width;
+    const stopR = stopFor(true);
+    const stopL = stopFor(false);
+    const roomR = approachRoom(true, stopR, wR, margin0);
+    const roomL = approachRoom(false, stopL, wL, margin0);
+    if (preferRight && roomR >= 0) facingRight = true;
+    else if (!preferRight && roomL >= 0) facingRight = false;
+    else facingRight = roomR >= roomL;
+  } else {
+    facingRight = Math.random() < 0.5;
+  }
 
   const set = artFor(prepared, WALK, facingRight);
   const w = set.frames[0].width;
@@ -106,15 +145,40 @@ function spawn(anim, spec, opts = {}) {
   const speed = (spec.baseSpeed || 0.35) * band.speed;
   const dx = facingRight ? speed : -speed;
 
+  // stopX before startX so the opening cast can sit on the approach side of
+  // its feature. A uniform random x across the band put most animals already
+  // past their waterhole/tree, so targetX stayed null and the first minute
+  // was pure walk-throughs.
+  const stopX = stopFor(facingRight);
+
   // Normally an animal walks in from off-screen, which is what makes it feel
   // like it arrived. At startup that means staring at an empty jungle for the
   // 12-20 seconds it takes to walk on, so the opening cast is placed already
-  // in view.
+  // in view — but still short of its feature when it has one.
   let startX = facingRight ? -w : anim.width();
+  const margin = Math.max(2, Math.floor(anim.width() * 0.08));
   if (opts.onScreen) {
-    const margin = Math.max(2, Math.floor(anim.width() * 0.08));
-    const span = Math.max(1, anim.width() - w - margin * 2);
-    startX = margin + Math.floor(Math.random() * span);
+    if (stopX != null) {
+      // Keep at least a body-width of approach so the walk→act beat is visible.
+      const gap = w + 2;
+      if (facingRight) {
+        const maxStart = stopX - gap;
+        const minStart = margin;
+        startX = maxStart > minStart
+          ? minStart + Math.floor(Math.random() * (maxStart - minStart + 1))
+          : minStart;
+      } else {
+        const minStart = stopX + gap;
+        const maxStart = anim.width() - w - margin;
+        startX = maxStart > minStart
+          ? minStart + Math.floor(Math.random() * (maxStart - minStart + 1))
+          : Math.max(minStart, margin);
+      }
+      startX = Math.max(margin, Math.min(startX, anim.width() - w - margin));
+    } else {
+      const span = Math.max(1, anim.width() - w - margin * 2);
+      startX = margin + Math.floor(Math.random() * span);
+    }
   } else if (opts.atEdge) {
     // Summoned: stand fully in view at the edge straight away, then walk on.
     // Entering from off-screen means a keypress produces one column of pixels
@@ -123,21 +187,15 @@ function spawn(anim, spec, opts = {}) {
     startX = facingRight ? 0 : anim.width() - w;
   }
 
-  // The anchor is the column *within the act pose* that should line up with
-  // the feature — the trunk tip, the giraffe's muzzle, the panda's paws.
-  // Centring the sprite instead would leave the elephant drinking from dry
-  // ground a dozen columns to the left of the water.
   let targetX = null;
-  if (willAct) {
-    const anchor = facingRight
-      ? (spec.anchorRight != null ? spec.anchorRight : Math.floor(w / 2))
-      : (spec.anchorLeft != null ? spec.anchorLeft : Math.floor(w / 2));
-    // featureOffset nudges the whole animal sideways from the feature's
-    // centre — the panda needs to sit beside its bamboo clump rather than
-    // inside it, or the two drawings tangle into noise.
-    const stopX = featureX - anchor + (spec.featureOffset || 0);
-    const ahead = facingRight ? stopX > startX + w : stopX < startX - w;
-    if (ahead) targetX = stopX;
+  if (stopX != null) {
+    const isAhead = () => facingRight ? stopX > startX + w : stopX < startX - w;
+    if (!isAhead() && opts.onScreen) {
+      // Last resort: pin to the far edge of the approach side.
+      if (facingRight) startX = Math.max(margin, Math.min(stopX - w - 2, anim.width() - w - margin));
+      else startX = Math.min(anim.width() - w - margin, Math.max(stopX + w + 2, margin));
+    }
+    if (isAhead()) targetX = stopX;
   }
 
   const e = anim.newEntity({

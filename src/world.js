@@ -16,9 +16,11 @@ const { bandZ, sceneryZ } = require('./depth');
 // animal always drinks or grazes at something in *its own* slice of the world
 // and never appears to walk into scenery a hundred feet behind it.
 
-// A giraffe with its neck up is the tallest thing we place, so a band has to
-// be at least this tall to be worth having.
-const MIN_BAND_ROWS = 11;
+// Prefer three bands on common terminal heights (≈30–36 rows). A giraffe is
+// taller than a short band and will poke into the canopy — that reads as tall,
+// not broken. 11 was the old floor and locked typical macOS windows to 1–2
+// bands, which made the "3D jungle" claim a lie on the default layout.
+const MIN_BAND_ROWS = 8;
 const MAX_BANDS = 3;
 
 function bandName(i, count) {
@@ -48,9 +50,18 @@ function buildBands(anim) {
   const h = anim.height();
 
   // Top of the screen is sky and hanging canopy; bottom row is the foreground
-  // grass fringe. What's left gets divided into bands.
-  const skyRows = Math.min(6, Math.max(3, Math.floor(h * 0.14)));
-  const usable = h - skyRows - 1;
+  // grass fringe. What's left gets divided into bands. Cap sky a little
+  // tighter than before so a 30-row window still unlocks three bands.
+  let skyRows = Math.min(5, Math.max(2, Math.floor(h * 0.12)));
+  let usable = h - skyRows - 1;
+  // If we're one sky-row short of a third band, steal from the canopy rather
+  // than ship a flat two-band jungle.
+  if (usable < MIN_BAND_ROWS * MAX_BANDS && skyRows > 2) {
+    const need = MIN_BAND_ROWS * MAX_BANDS - usable;
+    const steal = Math.min(need, skyRows - 2);
+    skyRows -= steal;
+    usable = h - skyRows - 1;
+  }
   const count = Math.max(1, Math.min(MAX_BANDS, Math.floor(usable / MIN_BAND_ROWS)));
   const slice = usable / count;
 
@@ -114,14 +125,16 @@ function distanceToExit(anim, e) {
 // purely by distance-to-exit turned out to systematically execute the animal
 // *furthest along its walk* — which is precisely the one about to drink or
 // graze, so under regular keypresses nothing ever finished its behaviour.
-// Score by how much would be lost instead: an animal already leaving loses
-// nothing, a walk-past loses little, an actor is mid-performance, and an
-// animal still walking toward its feature has the whole payoff ahead of it.
+//
+// Score by how much would be lost. Mid-act ranks above approach: the old order
+// (approach=3, act=2) meant a veteran that finally started drinking became
+// cheaper to kill than a brand-new walker, so key-mash sims saw ~0 act
+// completions.
 function summonCost(e) {
   if (e.state === 'leave') return 0;
   if (e.state === 'walk' && e.targetX == null) return 1;
-  if (e.state === 'act') return 2;
-  return 3; // walking toward its feature — protect if at all possible
+  if (e.state === 'walk') return 2; // walking toward its feature
+  return 3; // act — finish the performance if at all possible
 }
 
 // The band whose occupant is cheapest to displace, so a summon has somewhere
@@ -133,20 +146,21 @@ function emptiestBand(anim) {
   for (const b of anim.bands) {
     for (const e of occupants(anim, b)) {
       // Cost tier dominates. Within a tier, tie-breaks differ:
-      //  - tiers 0-2: whoever is closest to the exit anyway.
-      //  - tier 3 (walking toward its feature): whoever has the MOST walking
-      //    still ahead — the least-invested animal. Under key-mashing this
-      //    makes each press recycle the newest arrival while the veterans
-      //    deeper into their walk survive to actually drink and graze;
-      //    tie-breaking by progress instead meant nothing ever finished.
+      //  - leave / walk-past: whoever is closest to the exit anyway.
+      //  - approaching: whoever has the MOST walking still ahead (least
+      //    invested) — recycle the newest arrival under key-mashing.
+      //  - act: whoever has the fewest act ticks left (almost done).
+      const cost = summonCost(e);
       let tie;
-      if (summonCost(e) === 3) {
+      if (cost === 2 && e.targetX != null) {
         const remaining = Math.abs(e.targetX - e.x);
         tie = Math.max(0, 9999 - remaining);
+      } else if (cost === 3) {
+        tie = e.actLeft != null ? e.actLeft : 0;
       } else {
         tie = distanceToExit(anim, e);
       }
-      const key = summonCost(e) * 10000 + tie;
+      const key = cost * 10000 + tie;
       if (key < bestKey) { bestKey = key; best = b; }
     }
   }
