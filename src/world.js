@@ -36,7 +36,7 @@ function buildWorld(anim) {
     },
     // Hands just above the giraffe crown, on vines that reach this row.
     swingY: Math.max(skyRows + 2, groundY - 12),
-    swings: [Math.floor(w * 0.50)],
+    swings: [],
     z: {
       animal: DEPTH.animal,
       shoulder: DEPTH.shoulder,
@@ -135,28 +135,40 @@ function ensureClearX(anim, preferred, w, facingRight, force, lane) {
   return null;
 }
 
-// Vine / tree columns a monkey can brachiate to. Tree is always a seat;
-// vines are appended as scenery places them.
-function pickSwingX(anim) {
-  const pts = (anim.world.swings && anim.world.swings.length)
+function swingList(anim) {
+  const raw = anim.world.swings && anim.world.swings.length
     ? anim.world.swings
-    : [anim.world.features.treeX];
+    : [{ x: anim.world.features.treeX, y: anim.world.swingY }];
+  return raw.map((p) => (typeof p === 'number' ? { x: p, y: anim.world.swingY } : p));
+}
+
+function addSwing(anim, x, y) {
+  if (!anim.world.swings) anim.world.swings = [];
+  anim.world.swings.push({ x, y });
+}
+
+function pickSwing(anim) {
   const taken = new Set();
   for (const o of occupants(anim)) {
     if (!o.featureKey || o.featureKey.indexOf('swing:') !== 0) continue;
     if (o.state === 'act' || o.targetX != null) taken.add(+o.featureKey.slice(6));
   }
-  const free = pts.filter((x) => !taken.has(x));
+  const free = swingList(anim).filter((p) => !taken.has(p.x));
   if (!free.length) return null;
   return free[Math.floor(Math.random() * free.length)];
 }
 
-// Next vine in the facing direction, or null if this monkey should turn around.
+function pickSwingX(anim) {
+  const p = pickSwing(anim);
+  return p ? p.x : null;
+}
+
+// Next perch in the facing direction, or undefined if the monkey should turn.
 function nextSwing(anim, fromX, facingRight) {
-  const pts = (anim.world.swings || []).slice().sort((a, b) => a - b);
-  if (facingRight) return pts.find((x) => x > fromX + 4);
+  const pts = swingList(anim).slice().sort((a, b) => a.x - b.x);
+  if (facingRight) return pts.find((p) => p.x > fromX + 4);
   for (let i = pts.length - 1; i >= 0; i--) {
-    if (pts[i] < fromX - 4) return pts[i];
+    if (pts[i].x < fromX - 4) return pts[i];
   }
   return undefined;
 }
@@ -198,6 +210,6 @@ function cheapestToRetire(anim, lane) {
 
 module.exports = {
   buildWorld, occupants, canAdd, maxAnimals, roomAt, blockerAt, shoulderTaken,
-  featureBusy, pickSwingX, nextSwing, findClearX, ensureClearX, cheapestToRetire,
+  featureBusy, addSwing, pickSwing, pickSwingX, nextSwing, findClearX, ensureClearX, cheapestToRetire,
   distanceToExit, summonCost,
 };

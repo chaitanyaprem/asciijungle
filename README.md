@@ -37,7 +37,7 @@ Flags: `--calm` (only the animal keys summon; other keys do nothing), `--mute`, 
 
 One scene: one ground line, one waterhole, one browse-height tree, one
 bamboo clump. The top of the screen is sky — sun, clouds, birds — not
-a roof of vines. A couple of lianas hang off the path tree for monkeys.
+a roof of vines. A grove of mixed-height trees gives monkeys a run of crowns to hop.
 
 Two animals on the same ground line still blob if they overlap, so they
 don't. Same-direction walkers wait. Head-on traffic steps onto a dimmer

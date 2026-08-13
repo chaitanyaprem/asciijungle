@@ -2,6 +2,7 @@
 
 const { DEPTH } = require('./depth');
 const { mirror } = require('./artkit');
+const { addSwing } = require('./world');
 
 // The scenery is generated rather than hand-drawn: the tree has to reach from
 // the single ground line up to where a browsing giraffe's head will be, and
@@ -104,6 +105,7 @@ function addTallTree(anim) {
     defaultColor: 'g',
     autoTrans: true,
   });
+  addSwing(anim, anim.world.features.treeX, anim.world.groundY - lines.length + 2);
 }
 
 // ───────────────────────────── bamboo ─────────────────────────────
@@ -216,54 +218,67 @@ function addVines(anim) {
       defaultColor: 'g',
       autoTrans: true,
     });
-    if (anim.world.swings) anim.world.swings.push(xs[i]);
+    addSwing(anim, xs[i], startY + 1);
   }
 }
 
-// Trees that reach the canopy. Dim, behind the path set — they fill the
-// column on a tall monitor without becoming a second floor or the giraffe's
-// browse target.
-function addBackdropTrees(anim) {
-  const w = anim.width();
-  const groundY = anim.world.groundY;
-  // Crowns sit below the sky so they don't bury the sun.
-  const crownTop = Math.max(anim.skyRows + 6, Math.floor(anim.height() * 0.28));
-  const height = groundY - crownTop;
-  if (anim.height() < 32 || height < 16) return;
+const CROWNS = {
+  small: [
+    '  /@@\\  ',
+    ' /@@@@\\ ',
+    '  \\@@/  ',
+  ],
+  mid: [
+    '   __/\\__   ',
+    ' _/@@@@@@\\_ ',
+    '/@@@@@@@@@@\\',
+    '  \\@@@@@@/  ',
+  ],
+  tall: [
+    '    ____/\\____    ',
+    '  _/@@@@@@@@@@\\_  ',
+    ' /@@@@@@@@@@@@@@\\ ',
+    '|@@@@@@@@@@@@@@@@|',
+    '  \\_@@@@@@@@@@_/  ',
+    '    \\_@@@@@@_/    ',
+  ],
+};
 
-  const crown = [
-    '     ____/\\____     ',
-    '  __/@@@@@@@@@@\\__  ',
-    ' /@@@@@@@@@@@@@@@@\\ ',
-    '|@@@@@@@@@@@@@@@@@@|',
-    ' \\_@@@@@@@@@@@@@@_/ ',
-    '   \\_@@@@@@@@@@_/   ',
-    '     \\_@@@@@@_/     ',
-  ];
-  // Sides only — a third trunk in the middle fights the giraffe tree.
-  const xs = [
-    Math.floor(w * 0.10),
-    Math.floor(w * 0.90),
-  ];
-  for (let i = 0; i < xs.length; i++) {
-    const trunkRows = Math.max(2, height - crown.length);
-    const lines = crown.slice();
-    const mask = crown.map((r) => r.replace(/@/g, 'G').replace(/[^G ]/g, 'g'));
-    for (let t = 0; t < trunkRows; t++) {
-      lines.push(t % 4 === 2 ? '      ,@||@,        ' : '        |  |        ');
-      mask.push(t % 4 === 2 ? '      Gg yG         ' : '        y  y        ');
-    }
-    anim.newEntity({
-      name: `backdrop-${i}`,
-      type: 'scenery',
-      shape: lines.join('\n'),
-      color: mask.join('\n'),
-      position: [xs[i] - 10, groundY - lines.length, DEPTH.backdrop],
-      defaultColor: 'g',
-      shade: 'dim',
-      autoTrans: true,
-    });
-    if (anim.world.swings) anim.world.swings.push(xs[i]);
+function addGroveTree(anim, x, totalH) {
+  const crown = totalH >= 14 ? CROWNS.tall : totalH >= 10 ? CROWNS.mid : CROWNS.small;
+  const trunkRows = Math.max(1, totalH - crown.length);
+  const lines = crown.slice();
+  const mask = crown.map((r) => r.replace(/@/g, 'G').replace(/[^G ]/g, 'g'));
+  const pad = Math.floor((Math.max(...crown.map((r) => r.length)) - 4) / 2);
+  const trunk = ' '.repeat(pad) + '|  |';
+  const tuft = ' '.repeat(Math.max(0, pad - 2)) + ',@||@,';
+  for (let i = 0; i < trunkRows; i++) {
+    lines.push(i === 1 && trunkRows > 2 ? tuft : trunk);
+    mask.push((i === 1 && trunkRows > 2 ? tuft : trunk).replace(/@/g, 'G').replace(/[|,]/g, 'y'));
+  }
+  const w = Math.max(...lines.map((l) => l.length));
+  anim.newEntity({
+    name: `grove-${x}`,
+    type: 'scenery',
+    shape: lines.join('\n'),
+    color: mask.join('\n'),
+    position: [x - Math.floor(w / 2), anim.world.groundY - lines.length, anim.world.z.scenery],
+    defaultColor: 'g',
+    autoTrans: true,
+  });
+  addSwing(anim, x, anim.world.groundY - lines.length + 2);
+}
+
+// Extra trees of mixed heights so monkeys have a run of crowns to hop.
+function addGrove(anim) {
+  const w = anim.width();
+  // Slots sit between water (0.22), browse tree (0.50) and bamboo (0.78).
+  const slots = w >= 90
+    ? [0.10, 0.34, 0.64, 0.90]
+    : [0.12, 0.36, 0.88];
+  const heights = [8, 14, 10, 16];
+  for (let i = 0; i < slots.length; i++) {
+    addGroveTree(anim, Math.floor(w * slots[i]), heights[i % heights.length]);
   }
 }
 
@@ -362,7 +377,7 @@ function addScenery(anim) {
   addClouds(anim);
   addBirds(anim);
   addVines(anim);
-  addBackdropTrees(anim);
+  addGrove(anim);
   addGround(anim);
   addShrubs(anim);
   addTallTree(anim);

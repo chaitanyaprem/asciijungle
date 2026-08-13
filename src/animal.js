@@ -3,7 +3,7 @@
 const { parseShape, parseMask } = require('./engine');
 const {
   canAdd, cheapestToRetire, blockerAt, shoulderTaken, featureBusy,
-  ensureClearX, roomAt, pickSwingX, nextSwing,
+  ensureClearX, roomAt, pickSwing, nextSwing,
 } = require('./world');
 const sound = require('./sound');
 
@@ -86,7 +86,8 @@ function spawn(anim, spec, opts = {}) {
   if (featureKey === 'anywhere') {
     featureX = Math.floor(anim.width() * (0.25 + Math.random() * 0.5));
   } else if (featureKey === 'swing') {
-    featureX = pickSwingX(anim);
+    const perch = pickSwing(anim);
+    featureX = perch ? perch.x : null;
     if (featureX != null) featureKey = 'swing:' + featureX;
     else featureKey = null;
   } else if (featureKey) {
@@ -177,18 +178,18 @@ function spawn(anim, spec, opts = {}) {
     if (toward) targetX = stopX;
   }
 
-  const attachY = lane === 'canopy' ? world.swingY : world.groundY;
+  let attachY = lane === 'canopy' ? world.swingY : world.groundY;
   if (lane === 'canopy') {
-    let vine = featureX;
-    if (vine == null) vine = pickSwingX(anim);
-    if (vine == null) vine = (world.swings && world.swings[0]) || Math.floor(anim.width() / 2);
+    const perch = pickSwing(anim)
+      || { x: world.features.treeX, y: world.swingY };
     const anchor = facingRight
       ? (spec.anchorRight != null ? spec.anchorRight : 2)
       : (spec.anchorLeft != null ? spec.anchorLeft : 2);
-    startX = Math.max(0, Math.min(vine - anchor, anim.width() - w));
+    startX = Math.max(0, Math.min(perch.x - anchor, anim.width() - w));
+    attachY = perch.y;
     targetX = null;
-    featureX = vine;
-    featureKey = 'swing:' + vine;
+    featureX = perch.x;
+    featureKey = 'swing:' + perch.x;
   }
 
   const e = anim.newEntity({
@@ -254,10 +255,14 @@ function step(e, anim) {
           : (spec.anchorLeft != null ? spec.anchorLeft : 2);
         const leap = spec.leapSpeed || spec.baseSpeed || 0.8;
         e.state = WALK;
-        e.targetX = nxt - anchor;
+        e.targetX = nxt.x - anchor;
+        e.leapFromX = e.physX;
+        e.leapToX = e.targetX;
+        e.leapFromY = e.groundY;
+        e.leapToY = nxt.y;
         e.dx = e.facingRight ? leap : -leap;
         e.baseDx = e.dx;
-        e.featureKey = 'swing:' + nxt;
+        e.featureKey = 'swing:' + nxt.x;
         useArt(e, artFor(e.prepared, WALK, e.facingRight));
         return;
       }
@@ -275,12 +280,22 @@ function step(e, anim) {
     e.physX += e.dx;
     e.physFrame += e.frameSpeed;
     e.x = Math.floor(e.physX);
+    if (e.leapToX != null && e.leapFromX != null) {
+      const span = e.leapToX - e.leapFromX;
+      let t = span === 0 ? 1 : (e.physX - e.leapFromX) / span;
+      t = Math.max(0, Math.min(1, t));
+      e.groundY = e.leapFromY + (e.leapToY - e.leapFromY) * t;
+      e.physY = e.groundY - e.height() - Math.round(Math.sin(t * Math.PI) * 2);
+      e.y = Math.floor(e.physY);
+    }
     if (e.state === WALK && e.targetX != null) {
       const reached = e.facingRight ? e.x >= e.targetX : e.x <= e.targetX;
       if (reached) {
         e.state = ACT;
         e.dx = 0;
         e.targetX = null;
+        if (e.leapToY != null) e.groundY = e.leapToY;
+        e.leapFromX = e.leapToX = e.leapFromY = e.leapToY = null;
         e.actLeft = spec.actTicks || 45;
         useArt(e, artFor(e.prepared, ACT, e.facingRight));
         if (spec.sound) sound.play(spec.sound);
