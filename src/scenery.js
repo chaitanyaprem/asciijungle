@@ -1,6 +1,7 @@
 'use strict';
 
 const { DEPTH } = require('./depth');
+const { mirror } = require('./artkit');
 
 // The scenery is generated rather than hand-drawn: the tree has to reach from
 // the single ground line up to where a browsing giraffe's head will be, and
@@ -319,16 +320,20 @@ function addClouds(anim) {
   }
 }
 
-const BIRD_UP = `
-  \\   /
-   \\./
-    v
+// Side-on flyer: head, beak, body, a wing that beats. The old \ / v
+// read as a tick mark, not a bird.
+const BIRD_R_UP = `
+      _
+   __(o)>
+    /  \\
 `;
-const BIRD_DN = `
- \\___/
-  \\./
-   v
+const BIRD_R_DN = `
+      _
+_____(o)>
+     V V
 `;
+const BIRD_L_UP = mirror(BIRD_R_UP);
+const BIRD_L_DN = mirror(BIRD_R_DN);
 
 function addBirds(anim) {
   const n = Math.max(3, Math.floor(anim.width() / 28));
@@ -338,13 +343,13 @@ function addBirds(anim) {
     anim.newEntity({
       name: `bird-${i}`,
       type: 'scenery',
-      shape: [BIRD_UP, BIRD_DN],
+      shape: right ? [BIRD_R_UP, BIRD_R_DN] : [BIRD_L_UP, BIRD_L_DN],
       position: [
         Math.floor(Math.random() * anim.width()),
         1 + Math.floor(Math.random() * yMax),
         DEPTH.skyDecor,
       ],
-      callbackArgs: [right ? 0.45 : -0.4, 0, 0, 0.22],
+      callbackArgs: [right ? 0.45 : -0.4, 0, 0, 0.2],
       callback: drift,
       defaultColor: 'W',
       autoTrans: true,
