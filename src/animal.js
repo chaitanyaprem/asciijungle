@@ -3,7 +3,7 @@
 const { parseShape, parseMask } = require('./engine');
 const {
   canAdd, cheapestToRetire, blockerAt, shoulderTaken, featureBusy,
-  ensureClearX, roomAt, pickSwingX,
+  ensureClearX, roomAt, pickSwingX, nextSwing,
 } = require('./world');
 const sound = require('./sound');
 
@@ -178,6 +178,19 @@ function spawn(anim, spec, opts = {}) {
   }
 
   const attachY = lane === 'canopy' ? world.swingY : world.groundY;
+  if (lane === 'canopy') {
+    let vine = featureX;
+    if (vine == null) vine = pickSwingX(anim);
+    if (vine == null) vine = (world.swings && world.swings[0]) || Math.floor(anim.width() / 2);
+    const anchor = facingRight
+      ? (spec.anchorRight != null ? spec.anchorRight : 2)
+      : (spec.anchorLeft != null ? spec.anchorLeft : 2);
+    startX = Math.max(0, Math.min(vine - anchor, anim.width() - w));
+    targetX = null;
+    featureX = vine;
+    featureKey = 'swing:' + vine;
+  }
+
   const e = anim.newEntity({
     name: `${spec.type}-${Math.random().toString(36).slice(2, 7)}`,
     type: spec.type,
@@ -194,7 +207,8 @@ function spawn(anim, spec, opts = {}) {
   e.prepared = prepared;
   e.groundY = attachY;
   e.lane = lane;
-  e.featureKey = targetX != null ? featureKey : null;
+  e.featureKey = lane === 'canopy' ? featureKey
+    : (targetX != null ? featureKey : null);
   e.facingRight = facingRight;
   e.state = WALK;
   e.targetX = targetX;
@@ -204,6 +218,15 @@ function spawn(anim, spec, opts = {}) {
   useArt(e, set);
   e.physX = startX;
   e.x = startX;
+
+  if (lane === 'canopy') {
+    e.state = ACT;
+    e.dx = 0;
+    e.actLeft = spec.actTicks || 45;
+    useArt(e, artFor(prepared, ACT, facingRight));
+    e.physX = startX;
+    e.x = startX;
+  }
 
   if (spec.sound && opts.announce) sound.play(spec.sound);
   return e;
@@ -216,6 +239,28 @@ function step(e, anim) {
     e.physFrame += spec.actFrameSpeed || 0.12;
     e.actLeft -= 1;
     if (e.actLeft <= 0) {
+      if (e.lane === 'canopy') {
+        const grip = e.x + (e.facingRight
+          ? (spec.anchorRight != null ? spec.anchorRight : 2)
+          : (spec.anchorLeft != null ? spec.anchorLeft : 2));
+        let nxt = nextSwing(anim, grip, e.facingRight);
+        if (nxt == null) {
+          e.facingRight = !e.facingRight;
+          nxt = nextSwing(anim, grip, e.facingRight);
+        }
+        if (nxt == null) { e.alive = false; return; }
+        const anchor = e.facingRight
+          ? (spec.anchorRight != null ? spec.anchorRight : 2)
+          : (spec.anchorLeft != null ? spec.anchorLeft : 2);
+        const leap = spec.leapSpeed || spec.baseSpeed || 0.8;
+        e.state = WALK;
+        e.targetX = nxt - anchor;
+        e.dx = e.facingRight ? leap : -leap;
+        e.baseDx = e.dx;
+        e.featureKey = 'swing:' + nxt;
+        useArt(e, artFor(e.prepared, WALK, e.facingRight));
+        return;
+      }
       e.state = LEAVE;
       e.featureKey = null;
       e.dx = e.baseDx;

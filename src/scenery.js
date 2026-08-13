@@ -179,18 +179,17 @@ function addCanopy(anim) {
   const rows = Math.max(2, anim.skyRows - 1);
   const grid = Array.from({ length: rows }, () => new Array(w).fill(' '));
 
-  // Dense at the top, thinning as it hangs. Per-cell static reads as noise;
-  // clumps of 2–4 columns are what the eye accepts as foliage.
-  const densityAt = (r) => Math.max(0.08, 0.88 - (r / Math.max(1, rows)) * 0.75);
-  for (let r = 0; r < rows; r++) {
-    let x = 0;
-    while (x < w) {
-      if (Math.random() > densityAt(r)) { x += 1; continue; }
-      const span = 1 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < span && x + i < w; i++) {
-        grid[r][x + i] = pick(['@', '@', '%', '&', '*']);
-      }
-      x += span + (Math.random() < 0.4 ? 0 : 1);
+  // A fringe, not a roof: clumps along the top with short drips.
+  for (let x = 0; x < w; x++) {
+    if (Math.random() < 0.55) grid[0][x] = pick(['@', '%', '&']);
+  }
+  const drips = Math.floor(w / 8);
+  for (let f = 0; f < drips; f++) {
+    const x = Math.floor(Math.random() * w);
+    const len = 1 + Math.floor(Math.random() * Math.max(1, rows - 1));
+    for (let r = 1; r <= len && r < rows; r++) {
+      grid[r][x] = pick(['@', '%', '*']);
+      if (Math.random() < 0.3 && x + 1 < w) grid[r][x + 1] = pick(['@', '%']);
     }
   }
 
@@ -257,14 +256,20 @@ function addForeground(anim) {
 // the giraffe crown so the acting stage stays readable.
 function addVines(anim) {
   const w = anim.width();
-  const startY = Math.max(1, anim.skyRows - 2);
-  const stopY = anim.world.groundY - GIRAFFE_BROWSE_HEIGHT - 1;
+  // Reach at least to swingY so a monkey's hands meet a real vine.
+  const startY = Math.max(1, anim.skyRows - 1);
+  const stopY = Math.max(
+    anim.world.swingY + 3,
+    anim.world.groundY - GIRAFFE_BROWSE_HEIGHT - 1
+  );
   const maxLen = stopY - startY;
   if (maxLen < 3) return;
-  const n = Math.max(4, Math.floor(w / 10));
+  const n = Math.max(3, Math.floor(w / 18));
+  const minLen = Math.max(4, anim.world.swingY - startY + 2);
   for (let i = 0; i < n; i++) {
     const x = 2 + Math.floor(Math.random() * (w - 6));
-    const len = 4 + Math.floor(Math.random() * maxLen);
+    const extra = Math.max(0, maxLen - minLen);
+    const len = minLen + Math.floor(Math.random() * (extra + 1));
     const lines = [];
     const mask = [];
     for (let r = 0; r < len; r++) {
@@ -297,7 +302,7 @@ function addMidFoliage(anim) {
     '   _/@@@\\_   \n _/@@@@@@@\\_ \n/@@@@@@@@@@@\\\n\\_@@@@@@@@@_/\n  \\_@@@@@_/  ',
     ' @@@%@@@ \n@@@@@@@@@\n %@@@@@% ',
   ];
-  const n = Math.max(5, Math.floor(anim.width() / 12));
+  const n = Math.max(2, Math.floor(anim.width() / 28));
   for (let i = 0; i < n; i++) {
     const art = pick(blobs);
     const rows = art.split('\n');
@@ -324,7 +329,7 @@ function addBackdropTrees(anim) {
   const groundY = anim.world.groundY;
   const crownTop = Math.max(2, Math.floor(anim.skyRows * 0.45));
   const height = groundY - crownTop;
-  if (height < 16) return;
+  if (anim.height() < 32 || height < 16) return;
 
   const crown = [
     '     ____/\\____     ',
@@ -362,8 +367,60 @@ function addBackdropTrees(anim) {
   }
 }
 
+function addSun(anim) {
+  const art = [
+    '  \\|/  ',
+    ' --*-- ',
+    '  /|\\  ',
+  ].join('\n');
+  anim.newEntity({
+    name: 'sun',
+    type: 'scenery',
+    shape: art,
+    position: [Math.max(2, anim.width() - 12), 0, DEPTH.sky - 2],
+    defaultColor: 'Y',
+    autoTrans: true,
+  });
+}
+
+const BIRD_A = ' \n/v\\';
+const BIRD_B = '\n\\^/';
+
+function flap(e, anim) {
+  e.physX += e.dx;
+  e.physFrame += e.frameSpeed;
+  e.x = Math.floor(e.physX);
+  if (e.dx > 0 && e.x > anim.width()) e.physX = -3;
+  if (e.dx < 0 && e.x + e.width() < 0) e.physX = anim.width();
+  e.x = Math.floor(e.physX);
+}
+
+function addBirds(anim) {
+  const n = Math.max(2, Math.floor(anim.width() / 40));
+  const yMax = Math.max(2, anim.skyRows + 1);
+  for (let i = 0; i < n; i++) {
+    const right = Math.random() < 0.5;
+    anim.newEntity({
+      name: `bird-${i}`,
+      type: 'scenery',
+      shape: [BIRD_A, BIRD_B],
+      position: [
+        Math.floor(Math.random() * anim.width()),
+        1 + Math.floor(Math.random() * yMax),
+        DEPTH.sky - 5,
+      ],
+      callbackArgs: [right ? 0.35 : -0.35, 0, 0, 0.18],
+      callback: flap,
+      defaultColor: 'k',
+      autoTrans: true,
+    });
+  }
+}
+
 function addScenery(anim) {
   addSky(anim);
+  addSun(anim);
+  addBirds(anim);
   addCanopy(anim);
   addVines(anim);
   addMidFoliage(anim);

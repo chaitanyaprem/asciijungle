@@ -21,11 +21,10 @@ function maxAnimals(anim) {
 function buildWorld(anim) {
   const w = anim.width();
   const h = anim.height();
-  // Leave ~14 rows for the path and the giraffe-scale tree. Everything
-  // above that is hanging forest — otherwise a 50-row window is a strip
-  // of dirt under a postage-stamp canopy.
+  // A thin hanging edge, not a forest ceiling. Leave the rest as sky
+  // so the sun and birds have somewhere to be.
   const reserved = 14;
-  const skyRows = Math.max(3, Math.min(h - reserved, Math.floor(h * 0.42)));
+  const skyRows = Math.max(3, Math.min(6, Math.floor(h * 0.12)));
   const groundY = Math.max(skyRows + 12, h - 2);
 
   anim.world = {
@@ -35,11 +34,8 @@ function buildWorld(anim) {
       treeX: Math.floor(w * 0.50),
       bambooX: Math.floor(w * 0.78),
     },
-    // Hands hang from this row. Above the giraffe crown, below the canopy.
-    swingY: Math.max(
-      skyRows + 1,
-      Math.min(groundY - 13, Math.floor((skyRows + groundY - 12) / 2))
-    ),
+    // Hands just above the giraffe crown, on vines that reach this row.
+    swingY: Math.max(skyRows + 2, groundY - 12),
     swings: [Math.floor(w * 0.50)],
     z: {
       animal: DEPTH.animal,
@@ -155,6 +151,16 @@ function pickSwingX(anim) {
   return free[Math.floor(Math.random() * free.length)];
 }
 
+// Next vine in the facing direction, or null if this monkey should turn around.
+function nextSwing(anim, fromX, facingRight) {
+  const pts = (anim.world.swings || []).slice().sort((a, b) => a - b);
+  if (facingRight) return pts.find((x) => x > fromX + 4);
+  for (let i = pts.length - 1; i >= 0; i--) {
+    if (pts[i] < fromX - 4) return pts[i];
+  }
+  return undefined;
+}
+
 function distanceToExit(anim, e) {
   return e.dx >= 0 ? anim.width() - e.x : e.x + e.width();
 }
@@ -192,6 +198,6 @@ function cheapestToRetire(anim, lane) {
 
 module.exports = {
   buildWorld, occupants, canAdd, maxAnimals, roomAt, blockerAt, shoulderTaken,
-  featureBusy, pickSwingX, findClearX, ensureClearX, cheapestToRetire,
+  featureBusy, pickSwingX, nextSwing, findClearX, ensureClearX, cheapestToRetire,
   distanceToExit, summonCost,
 };

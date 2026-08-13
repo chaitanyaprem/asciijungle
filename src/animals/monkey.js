@@ -3,54 +3,52 @@
 const animal = require('../animal');
 const { mirror } = require('../artkit');
 
-// Monkey. Lives in the canopy: brachiates along vines and tree trunks
-// instead of knuckle-walking the path (that pose fought the sitting lion
-// for the same doorstep). The tail and hanging arms are the silhouette.
-//
-// Walk frames are the swing. Act is a hang-and-eat at one vine, still
-// off the ground. Sit art is a leftover of ejm97 via ascii.co.uk/art/monkey.
-const SWING_R_A = `
-      |
-   w-c(..)
-     /||\\
-      / \\
+// Monkey. Hangs on a vine (the || is the grip, lined up with a real liana)
+// and hops vine-to-vine. A smooth glide across empty air read as flying.
+const HANG_A = `
+      ||
+     /o\\
+     ( )
+     / \\
 `;
 
-const SWING_R_B = `
-     /
-  c(..)-w
-    /||\\
-    / \\
+const HANG_B = `
+      ||
+     \\o/
+     ( )
+     / \\
 `;
 
-const HANG = `
-      |
-   w c(..)o
-     \\__( )
-      /  \\
+// Leap: trailing body, leading hand still on a vine glyph.
+const LEAP_R = `
+   ||
+    \\\\o
+    ( )
+     \\\\
 `;
 
-const SWING_L_A = mirror(SWING_R_A);
-const SWING_L_B = mirror(SWING_R_B);
+const LEAP_L = mirror(LEAP_R);
 
 const spec = {
   type: 'monkey',
   sound: 'monkey',
   lane: 'canopy',
   feature: 'swing',
-  defaultColor: 'r',
-  baseSpeed: 0.85,
-  frameSpeed: 0.28,
-  actFrameSpeed: 0.14,
-  actTicks: 55,
-  actChance: 0.95,
-  anchorLeft: 4,
+  defaultColor: 'y',
+  baseSpeed: 1.2,
+  leapSpeed: 1.4,
+  frameSpeed: 0.35,
+  actFrameSpeed: 0.2,
+  actTicks: 40,
+  actChance: 1,
+  // Column of the || grip, so it sits on the vine not beside it.
+  anchorLeft: 6,
   anchorRight: 6,
   art: {
-    walkRight: [SWING_R_A, SWING_R_B],
-    walkLeft: [SWING_L_A, SWING_L_B],
-    actRight: [HANG],
-    actLeft: [HANG],
+    walkRight: [LEAP_R],
+    walkLeft: [LEAP_L],
+    actRight: [HANG_A, HANG_B],
+    actLeft: [HANG_A, HANG_B],
   },
 };
 
