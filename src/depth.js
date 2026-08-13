@@ -14,7 +14,7 @@
 //   z 50   sky
 //
 // Path animals sit in front of the set. A head-on pass steps onto the
-// shoulder plane — one row up, dimmer, behind the other animal — then
+// shoulder plane — two rows up, dimmer, behind the other animal — then
 // drops back when the x-ranges separate.
 const DEPTH = {
   overlay: 0,

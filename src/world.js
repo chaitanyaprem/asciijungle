@@ -13,7 +13,9 @@ const GAP = 1;
 function maxAnimals(anim) {
   // Honest cap from body width, not species count. A 30-column elephant
   // and a 38-column crocodile do not share a 80-column path with three friends.
-  return Math.max(3, Math.min(4, Math.floor(anim.width() / 24)));
+  // Floor is 2: a 60-column window cannot hold three 18–30 column bodies.
+  // The old max(3, …) forced an overlap on every small terminal.
+  return Math.max(2, Math.min(4, Math.floor(anim.width() / 24)));
 }
 
 function buildWorld(anim) {
@@ -105,7 +107,25 @@ function findClearX(anim, preferred, w, facingRight, except) {
   for (let scan = 2; scan + w < width - 2; scan += 3) {
     if (roomAt(anim, scan, w, except, 'path')) return scan;
   }
-  return clamp(preferred);
+  return null;
+}
+
+// Find a gap, retiring the cheapest animals if `force` (a keypress must
+// produce a visible animal). Retire-and-rescan, don't carve a hole at a
+// fixed x — that used to kill the whole cast to fit one crocodile.
+function ensureClearX(anim, preferred, w, facingRight, force) {
+  let x = findClearX(anim, preferred, w, facingRight);
+  if (x != null) return x;
+  if (!force) return null;
+  let guard = occupants(anim).length;
+  while (guard--) {
+    const v = cheapestToRetire(anim);
+    if (!v) break;
+    v.alive = false;
+    x = findClearX(anim, preferred, w, facingRight);
+    if (x != null) return x;
+  }
+  return null;
 }
 
 function distanceToExit(anim, e) {
@@ -136,10 +156,13 @@ function cheapestToRetire(anim) {
     const key = cost * 10000 + tie;
     if (key < bestKey) { bestKey = key; best = e; }
   }
+  // Never bump a mid-act animal. A full path of drinkers stays put; the
+  // keypress is refused rather than cancelling a drink.
+  if (best && summonCost(best) === 3) return null;
   return best;
 }
 
 module.exports = {
   buildWorld, occupants, canAdd, maxAnimals, roomAt, blockerAt, shoulderTaken,
-  featureBusy, findClearX, cheapestToRetire, distanceToExit, summonCost,
+  featureBusy, findClearX, ensureClearX, cheapestToRetire, distanceToExit, summonCost,
 };

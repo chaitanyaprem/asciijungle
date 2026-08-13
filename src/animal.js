@@ -2,7 +2,8 @@
 
 const { parseShape, parseMask } = require('./engine');
 const {
-  canAdd, cheapestToRetire, blockerAt, shoulderTaken, featureBusy, findClearX,
+  canAdd, cheapestToRetire, blockerAt, shoulderTaken, featureBusy,
+  ensureClearX, roomAt,
 } = require('./world');
 const sound = require('./sound');
 
@@ -70,8 +71,6 @@ function spawn(anim, spec, opts = {}) {
   const world = anim.world;
   if (!world) return null;
 
-  // Add until the path is full. force (a keypress) still has to produce an
-  // animal — retire whoever loses least rather than refuse the key.
   if (!canAdd(anim)) {
     if (!opts.force) return null;
     const victim = cheapestToRetire(anim);
@@ -154,20 +153,21 @@ function spawn(anim, spec, opts = {}) {
       const span = Math.max(1, anim.width() - w - margin * 2);
       startX = margin + Math.floor(Math.random() * span);
     }
-    startX = findClearX(anim, startX, w, facingRight);
+    startX = ensureClearX(anim, startX, w, facingRight, !!opts.force);
+    if (startX == null) return null;
   } else if (opts.atEdge) {
-    startX = findClearX(anim, facingRight ? 0 : anim.width() - w, w, facingRight);
+    const edge = facingRight ? 0 : anim.width() - w;
+    startX = ensureClearX(anim, edge, w, facingRight, !!opts.force);
+    if (startX == null) return null;
   }
 
   let targetX = null;
   if (stopX != null) {
-    const isAhead = () => facingRight ? stopX > startX + w : stopX < startX - w;
-    if (!isAhead() && opts.onScreen) {
-      if (facingRight) startX = Math.max(margin, Math.min(stopX - w - 2, anim.width() - w - margin));
-      else startX = Math.min(anim.width() - w - margin, Math.max(stopX + w + 2, margin));
-      startX = findClearX(anim, startX, w, facingRight);
-    }
-    if (isAhead()) targetX = stopX;
+    // Full body-width gap is the onScreen walk-up. At the edge a nearby
+    // waterhole (x≈22) is still *ahead* of a right-facing elephant even
+    // when stopX < startX + width — they should still drink.
+    const toward = facingRight ? stopX > startX : stopX < startX;
+    if (toward) targetX = stopX;
   }
 
   const e = anim.newEntity({
@@ -239,6 +239,12 @@ function step(e, anim) {
     );
     if (stepAside) setLane(e, anim, 'shoulder');
     else {
+      // Already fused and can't take the shoulder: back up so we unstick
+      // instead of standing inside the other animal until it leaves.
+      if (stuck) {
+        e.physX -= Math.sign(e.dx || e.baseDx) * 2;
+        e.x = Math.floor(e.physX);
+      }
       e.physFrame += e.frameSpeed;
       return;
     }
@@ -256,15 +262,24 @@ function step(e, anim) {
         e.targetX = null;
         e.featureKey = null;
       } else {
-        e.state = ACT;
-        e.dx = 0;
-        e.targetX = null;
-        e.actLeft = spec.actTicks || 45;
-        e.sinkNow = spec.sink || 0;
-        if (e.lane === 'shoulder') setLane(e, anim, 'path');
-        useArt(e, artFor(e.prepared, ACT, e.facingRight));
-        if (spec.sound) sound.play(spec.sound);
-        return;
+        const actSet = artFor(e.prepared, ACT, e.facingRight);
+        const actW = actSet.frames[0].width;
+        // Panda sit is 31 columns. Switching into it on a crowded path
+        // swallows whoever is standing next to the bamboo.
+        if (!roomAt(anim, e.x, actW, e, 'path')) {
+          e.targetX = null;
+          e.featureKey = null;
+        } else {
+          e.state = ACT;
+          e.dx = 0;
+          e.targetX = null;
+          e.actLeft = spec.actTicks || 45;
+          e.sinkNow = spec.sink || 0;
+          if (e.lane === 'shoulder') setLane(e, anim, 'path');
+          useArt(e, actSet);
+          if (spec.sound) sound.play(spec.sound);
+          return;
+        }
       }
     }
   }

@@ -31,7 +31,7 @@ Zero dependencies, plain Node ≥ 14. Rendering is raw ANSI escapes.
 | `Ctrl+L` | redraw |
 | `Ctrl+C` | quit |
 
-Flags: `--calm` (only `e`/`g`/`p` do anything), `--mute`, `--check-sound`.
+Flags: `--calm` (only the animal keys summon; other keys do nothing), `--mute`, `--check-sound`.
 
 ## Depth
 
@@ -41,10 +41,10 @@ three stacked copies of the jungle.
 
 Two animals on the same ground line still blob if they overlap, so they
 don't. Same-direction walkers wait. Head-on traffic steps onto a dimmer
-row just above the path and drops back when the gap is clear. Landmarks
+row two rows above the path and drops back when the gap is clear. Landmarks
 are exclusive — one drinker at the water, one browser at the tree.
 
-A terminal's width sets how many bodies fit (usually 3–4), not a band count.
+A terminal's width sets how many bodies fit (usually 2–4), not a band count.
 
 ## Behaviour
 
@@ -63,9 +63,10 @@ Roughly one animal in five walks straight past without stopping. That variety
 matters more than it sounds. If every elephant stopped at every waterhole the
 scene would feel like a machine rather than a jungle.
 
-A key adds an animal until the path is full. After that a summon only
-retires someone who was already leaving (or walking past) so a drink in
-progress usually survives.
+A key adds an animal until the path is full. After that it retires a
+leaver or a walk-past; if everyone is still walking toward a landmark,
+the least-invested one goes. A drink in progress is never cancelled. If
+the path is all mid-act, the key is ignored.
 
 Species are chosen by picking whichever is currently rarest on screen, not by
 an independent random draw. A uniform draw looks fair and isn't: with three

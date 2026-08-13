@@ -69,10 +69,8 @@ function addWaterhole(anim) {
 const GIRAFFE_BROWSE_HEIGHT = 11;
 
 function addTallTree(anim) {
-  // Stretch the trunk to the canopy so the column reads as one jungle, not
-  // a tree sitting in a blank warehouse.
-  const room = anim.world.groundY - anim.skyRows;
-  const reach = Math.max(GIRAFFE_BROWSE_HEIGHT, room);
+  // Crown sits at giraffe-browse height so the muzzle lands in leaves, not
+  // bark. Leftover air on a tall terminal is canopy's job, not a 20-row pole.
   const crown = [
     '   __/\\__   ',
     ' _/@@@@@@\\_ ',
@@ -80,12 +78,17 @@ function addTallTree(anim) {
     '\\_@@@@@@@@_/',
     '  \\@@@@@@/  ',
   ];
-  const trunkRows = Math.max(1, reach - crown.length);
+  const trunkRows = Math.max(1, GIRAFFE_BROWSE_HEIGHT - crown.length + 1);
   const lines = crown.slice();
   const mask = crown.map((r) => r.replace(/@/g, 'G').replace(/[^G ]/g, 'g'));
   for (let i = 0; i < trunkRows; i++) {
-    lines.push('    |  |    ');
-    mask.push('    y  y    ');
+    if (i === 1 && trunkRows > 2) {
+      lines.push('  ,@||@,    ');
+      mask.push('  Gg yG     ');
+    } else {
+      lines.push('    |  |    ');
+      mask.push('    y  y    ');
+    }
   }
   anim.newEntity({
     name: 'tree',

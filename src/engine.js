@@ -9,7 +9,7 @@ const { ansiColor, shade } = require('./colors');
 // a body outline — which means the tree an animal is standing in front of
 // shows straight through its belly. Flood-filling from the border instead
 // leaves interior spaces opaque, so animals occlude the scenery behind them
-// and the depth bands actually read as layers.
+// and the path actually reads as a layer in front of the trees.
 function markOuterTransparent(lines, width) {
   const h = lines.length;
   const grid = lines.map((l) => l.split(''));
@@ -77,7 +77,7 @@ class Entity {
     this.frames = parseShape(opts.shape, opts.autoTrans, opts.transparent);
     this.colorMasks = opts.color ? parseMask(opts.color) : null;
     this.defaultColor = opts.defaultColor || 'w';
-    // 'dim' | 'bright' | null — set from the depth band, folded in at render.
+    // 'dim' | 'bright' | null — set from the lane, folded in at render.
     this.shade = opts.shade || null;
 
     const [x, y, z] = opts.position;
