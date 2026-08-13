@@ -56,7 +56,7 @@ thing, then carry on and leave.
 - **giraffe** → stretches its neck up into the tall tree and browses
 - **panda** → sits back in the bamboo, turns to face you, and eats
 - **lion** → lies down in the shade beside the tall tree
-- **monkey** → sits at the foot of the tree and eats
+- **monkey** → swings along vines and trees, then hangs to eat
 - **hedgehog** → trundles to a random spot and curls into a ball for a while
 - **crocodile** → slides into the waterhole and lurks, eyes above the surface
 

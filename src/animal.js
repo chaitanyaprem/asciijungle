@@ -3,7 +3,7 @@
 const { parseShape, parseMask } = require('./engine');
 const {
   canAdd, cheapestToRetire, blockerAt, shoulderTaken, featureBusy,
-  ensureClearX, roomAt,
+  ensureClearX, roomAt, pickSwingX,
 } = require('./world');
 const sound = require('./sound');
 
@@ -71,20 +71,27 @@ function spawn(anim, spec, opts = {}) {
   const world = anim.world;
   if (!world) return null;
 
-  if (!canAdd(anim)) {
+  const lane = spec.lane || 'path';
+  if (!canAdd(anim, lane)) {
     if (!opts.force) return null;
-    const victim = cheapestToRetire(anim);
+    const victim = cheapestToRetire(anim, lane);
     if (victim) victim.alive = false;
     else return null;
   }
 
   const prepared = spec._prepared || (spec._prepared = prepare(spec));
-  const featureKey = spec.feature == null ? null : spec.feature;
+  let featureKey = spec.feature == null ? null : spec.feature;
 
-  const featureX = featureKey == null ? null
-    : featureKey === 'anywhere'
-      ? Math.floor(anim.width() * (0.25 + Math.random() * 0.5))
-      : world.features[featureKey];
+  let featureX = null;
+  if (featureKey === 'anywhere') {
+    featureX = Math.floor(anim.width() * (0.25 + Math.random() * 0.5));
+  } else if (featureKey === 'swing') {
+    featureX = pickSwingX(anim);
+    if (featureX != null) featureKey = 'swing:' + featureX;
+    else featureKey = null;
+  } else if (featureKey) {
+    featureX = world.features[featureKey];
+  }
 
   let willAct = featureX != null &&
     Math.random() < (spec.actChance != null ? spec.actChance : 0.75);
@@ -153,11 +160,11 @@ function spawn(anim, spec, opts = {}) {
       const span = Math.max(1, anim.width() - w - margin * 2);
       startX = margin + Math.floor(Math.random() * span);
     }
-    startX = ensureClearX(anim, startX, w, facingRight, !!opts.force);
+    startX = ensureClearX(anim, startX, w, facingRight, !!opts.force, lane);
     if (startX == null) return null;
   } else if (opts.atEdge) {
     const edge = facingRight ? 0 : anim.width() - w;
-    startX = ensureClearX(anim, edge, w, facingRight, !!opts.force);
+    startX = ensureClearX(anim, edge, w, facingRight, !!opts.force, lane);
     if (startX == null) return null;
   }
 
@@ -170,11 +177,12 @@ function spawn(anim, spec, opts = {}) {
     if (toward) targetX = stopX;
   }
 
+  const attachY = lane === 'canopy' ? world.swingY : world.groundY;
   const e = anim.newEntity({
     name: `${spec.type}-${Math.random().toString(36).slice(2, 7)}`,
     type: spec.type,
     shape: [],
-    position: [startX, world.groundY - h, world.z.animal],
+    position: [startX, attachY - h, world.z.animal],
     callbackArgs: [dx, 0, 0, spec.frameSpeed || 0.25],
     defaultColor: spec.defaultColor || 'w',
     shade: null,
@@ -184,8 +192,8 @@ function spawn(anim, spec, opts = {}) {
 
   e.spec = spec;
   e.prepared = prepared;
-  e.groundY = world.groundY;
-  e.lane = 'path';
+  e.groundY = attachY;
+  e.lane = lane;
   e.featureKey = targetX != null ? featureKey : null;
   e.facingRight = facingRight;
   e.state = WALK;
@@ -214,6 +222,30 @@ function step(e, anim) {
       e.sinkNow = 0;
       useArt(e, artFor(e.prepared, WALK, e.facingRight));
     }
+    return;
+  }
+
+  // Canopy swingers never share the path, so they skip yield/shoulder.
+  if (e.lane === 'canopy') {
+    e.physX += e.dx;
+    e.physFrame += e.frameSpeed;
+    e.x = Math.floor(e.physX);
+    if (e.state === WALK && e.targetX != null) {
+      const reached = e.facingRight ? e.x >= e.targetX : e.x <= e.targetX;
+      if (reached) {
+        e.state = ACT;
+        e.dx = 0;
+        e.targetX = null;
+        e.actLeft = spec.actTicks || 45;
+        useArt(e, artFor(e.prepared, ACT, e.facingRight));
+        if (spec.sound) sound.play(spec.sound);
+        return;
+      }
+    }
+    const cw = e.width();
+    const off = e.x + cw <= 0 || e.x >= anim.width();
+    if (!off) e.entered = true;
+    else if (e.entered) e.alive = false;
     return;
   }
 

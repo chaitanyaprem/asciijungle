@@ -282,6 +282,7 @@ function addVines(anim) {
       shade: 'dim',
       autoTrans: true,
     });
+    if (anim.world.swings) anim.world.swings.push(x);
   }
 }
 
@@ -357,6 +358,7 @@ function addBackdropTrees(anim) {
       shade: 'dim',
       autoTrans: true,
     });
+    if (anim.world.swings) anim.world.swings.push(xs[i]);
   }
 }
 

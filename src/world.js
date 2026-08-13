@@ -35,6 +35,12 @@ function buildWorld(anim) {
       treeX: Math.floor(w * 0.50),
       bambooX: Math.floor(w * 0.78),
     },
+    // Hands hang from this row. Above the giraffe crown, below the canopy.
+    swingY: Math.max(
+      skyRows + 1,
+      Math.min(groundY - 13, Math.floor((skyRows + groundY - 12) / 2))
+    ),
+    swings: [Math.floor(w * 0.50)],
     z: {
       animal: DEPTH.animal,
       shoulder: DEPTH.shoulder,
@@ -49,8 +55,11 @@ function occupants(anim) {
   return anim.entities.filter((e) => e.alive && e.type !== 'scenery');
 }
 
-function canAdd(anim) {
-  return occupants(anim).length < maxAnimals(anim);
+function canAdd(anim, lane) {
+  if (lane === 'canopy') {
+    return occupants(anim).filter((e) => e.lane === 'canopy').length < 2;
+  }
+  return occupants(anim).filter((e) => e.lane !== 'canopy').length < maxAnimals(anim);
 }
 
 function xOverlap(ax, aw, bx, bw, pad) {
@@ -95,18 +104,19 @@ function featureBusy(anim, featureKey, except) {
   return false;
 }
 
-function findClearX(anim, preferred, w, facingRight, except) {
+function findClearX(anim, preferred, w, facingRight, except, lane) {
+  const want = lane || 'path';
   const width = anim.width();
   const clamp = (x) => Math.max(0, Math.min(x, width - w));
   let x = clamp(preferred);
-  if (roomAt(anim, x, w, except, 'path')) return x;
+  if (roomAt(anim, x, w, except, want)) return x;
   const step = facingRight ? -3 : 3;
   for (let i = 0; i < 40; i++) {
     x = clamp(x + step);
-    if (roomAt(anim, x, w, except, 'path')) return x;
+    if (roomAt(anim, x, w, except, want)) return x;
   }
   for (let scan = 2; scan + w < width - 2; scan += 3) {
-    if (roomAt(anim, scan, w, except, 'path')) return scan;
+    if (roomAt(anim, scan, w, except, want)) return scan;
   }
   return null;
 }
@@ -114,19 +124,35 @@ function findClearX(anim, preferred, w, facingRight, except) {
 // Find a gap, retiring the cheapest animals if `force` (a keypress must
 // produce a visible animal). Retire-and-rescan, don't carve a hole at a
 // fixed x — that used to kill the whole cast to fit one crocodile.
-function ensureClearX(anim, preferred, w, facingRight, force) {
-  let x = findClearX(anim, preferred, w, facingRight);
+function ensureClearX(anim, preferred, w, facingRight, force, lane) {
+  let x = findClearX(anim, preferred, w, facingRight, null, lane);
   if (x != null) return x;
   if (!force) return null;
   let guard = occupants(anim).length;
   while (guard--) {
-    const v = cheapestToRetire(anim);
+    const v = cheapestToRetire(anim, lane);
     if (!v) break;
     v.alive = false;
-    x = findClearX(anim, preferred, w, facingRight);
+    x = findClearX(anim, preferred, w, facingRight, null, lane);
     if (x != null) return x;
   }
   return null;
+}
+
+// Vine / tree columns a monkey can brachiate to. Tree is always a seat;
+// vines are appended as scenery places them.
+function pickSwingX(anim) {
+  const pts = (anim.world.swings && anim.world.swings.length)
+    ? anim.world.swings
+    : [anim.world.features.treeX];
+  const taken = new Set();
+  for (const o of occupants(anim)) {
+    if (!o.featureKey || o.featureKey.indexOf('swing:') !== 0) continue;
+    if (o.state === 'act' || o.targetX != null) taken.add(+o.featureKey.slice(6));
+  }
+  const free = pts.filter((x) => !taken.has(x));
+  if (!free.length) return null;
+  return free[Math.floor(Math.random() * free.length)];
 }
 
 function distanceToExit(anim, e) {
@@ -142,9 +168,10 @@ function summonCost(e) {
 
 // When the path is full and a summon must still produce an animal, retire
 // whoever loses least: leavers, then walk-pasts, then approaches, then acts.
-function cheapestToRetire(anim) {
+function cheapestToRetire(anim, lane) {
   let best = null, bestKey = Infinity;
   for (const e of occupants(anim)) {
+    if (lane && (e.lane || 'path') !== lane) continue;
     const cost = summonCost(e);
     let tie;
     if (cost === 2 && e.targetX != null) {
@@ -165,5 +192,6 @@ function cheapestToRetire(anim) {
 
 module.exports = {
   buildWorld, occupants, canAdd, maxAnimals, roomAt, blockerAt, shoulderTaken,
-  featureBusy, findClearX, ensureClearX, cheapestToRetire, distanceToExit, summonCost,
+  featureBusy, pickSwingX, findClearX, ensureClearX, cheapestToRetire,
+  distanceToExit, summonCost,
 };

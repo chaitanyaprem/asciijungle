@@ -1,54 +1,56 @@
 'use strict';
 
 const animal = require('../animal');
-const { mirror, shiftRow } = require('../artkit');
+const { mirror } = require('../artkit');
 
-// Monkey. Walks on all fours with the tail arced over its back — the tail is
-// the silhouette that separates "monkey" from "small bear". At the tall tree
-// it sits up on its haunches and eats, front-on; the sit pose borrows the
-// shape of ejm97's standing monkey from ascii.co.uk/art/monkey.
-const WALK_R_A = `
-    @
-   ( \\_____   __
-    \\      \\ (..)
-     \\      \\/ --'
-     _|  |   |  |
-    (_,' |   |,'
+// Monkey. Lives in the canopy: brachiates along vines and tree trunks
+// instead of knuckle-walking the path (that pose fought the sitting lion
+// for the same doorstep). The tail and hanging arms are the silhouette.
+//
+// Walk frames are the swing. Act is a hang-and-eat at one vine, still
+// off the ground. Sit art is a leftover of ejm97 via ascii.co.uk/art/monkey.
+const SWING_R_A = `
+      |
+   w-c(..)
+     /||\\
+      / \\
 `;
 
-const WALK_R_B = shiftRow(WALK_R_A, -1, 1);
-const WALK_L_A = mirror(WALK_R_A);
-const WALK_L_B = shiftRow(WALK_L_A, -1, 1);
+const SWING_R_B = `
+     /
+  c(..)-w
+    /||\\
+    / \\
+`;
 
-const SIT = `
-      __
+const HANG = `
+      |
    w c(..)o
-    \\__( )
+     \\__( )
       /  \\
-     ( /\\ )
-     _\\  /_
 `;
+
+const SWING_L_A = mirror(SWING_R_A);
+const SWING_L_B = mirror(SWING_R_B);
 
 const spec = {
   type: 'monkey',
   sound: 'monkey',
-  feature: 'treeX',
+  lane: 'canopy',
+  feature: 'swing',
   defaultColor: 'r',
-  baseSpeed: 0.7,
-  frameSpeed: 0.22,
-  actFrameSpeed: 0.1,
-  actTicks: 50,
-  actChance: 0.75,
-  // Sits at the base of the trunk, on the opposite side from where the lion
-  // rests so the two never share a doorstep.
-  anchorLeft: 5,
-  anchorRight: 5,
-  featureOffset: -9,
+  baseSpeed: 0.85,
+  frameSpeed: 0.28,
+  actFrameSpeed: 0.14,
+  actTicks: 55,
+  actChance: 0.95,
+  anchorLeft: 4,
+  anchorRight: 6,
   art: {
-    walkRight: [WALK_R_A, WALK_R_B],
-    walkLeft: [WALK_L_A, WALK_L_B],
-    actRight: [SIT],
-    actLeft: [SIT],
+    walkRight: [SWING_R_A, SWING_R_B],
+    walkLeft: [SWING_L_A, SWING_L_B],
+    actRight: [HANG],
+    actLeft: [HANG],
   },
 };
 
