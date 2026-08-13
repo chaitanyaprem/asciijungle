@@ -7,6 +7,7 @@
 //
 //   z  0   overlay text
 //   z  2   foreground grass
+//   z  6   sun, clouds, birds (must sit in front of the forest)
 //   z 10   path animals
 //   z 16   shoulder animals (pass-behind)
 //   z 20   scenery (path tree, water, bamboo, ground)
@@ -20,6 +21,7 @@
 const DEPTH = {
   overlay: 0,
   foreground: 2,
+  skyDecor: 6,
   animal: 10,
   shoulder: 16,
   scenery: 20,

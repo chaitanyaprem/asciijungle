@@ -3,17 +3,14 @@
 const animal = require('../animal');
 const { mirror, shiftRow, lines, widthOf } = require('../artkit');
 
-// Crocodile. Long, low, ridged back, toothy snout, dragging tail. Waddles to
-// the waterhole, slides in, and lurks with only eyes and snout above the
-// surface — the lurk pose's bottom row is its own waterline, which lands
-// flush with the waterhole surface because feet are pegged to the ground
-// line. Lurks longer than anything else acts, because that's the whole job of
-// being a crocodile.
+// Crocodile. Short enough to read as one animal, not a train: snout, eye,
+// ridged back, a few feet. The old 38-column walk smeared into the ground
+// line. Lurk is just eyes and bumps on the water.
 const WALK_R_A = `
-                            __
-  _/\\_/\\_/\\_/\\_/\\_______--(oo)_
- <__,--,__,--,__,--,____________'v'v'>
-    /'\\   /'\\      /'\\   /'\\
+         __
+   ./\\/\\(oo)______
+  <~-~-~-~-~-~-~-'
+     n    n    n
 `;
 
 const WALK_R_B = shiftRow(WALK_R_A, -1, 1);
@@ -21,9 +18,8 @@ const WALK_L_A = mirror(WALK_R_A);
 const WALK_L_B = shiftRow(WALK_L_A, -1, 1);
 
 const LURK_R = `
-          __
-  __/\\___(oo)_______,
- ~~~~~~~~~~~~~'v'v'~~
+      (oo)
+  ~~~~n~~n~~~~
 `;
 
 const LURK_L = mirror(LURK_R);
@@ -33,14 +29,13 @@ const spec = {
   sound: 'crocodile',
   feature: 'waterX',
   defaultColor: 'G',
-  baseSpeed: 0.35,
-  frameSpeed: 0.15,
+  baseSpeed: 0.4,
+  frameSpeed: 0.16,
   actFrameSpeed: 0.03,
   actTicks: 120,
   actChance: 0.9,
-  sink: 1, // lurk one row lower so its waterline sits on the pond surface
-  // Eye-bump column in the lurk pose, centred on the waterhole.
-  anchorRight: 10,
+  sink: 1,
+  anchorRight: 8,
   anchorLeft: null,
   art: {
     walkRight: [WALK_R_A, WALK_R_B],

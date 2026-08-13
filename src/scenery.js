@@ -171,62 +171,6 @@ function addShrubs(anim) {
   }
 }
 
-// ─────────────────────────── sky & canopy ─────────────────────────
-// Leaves hanging into the top of the frame. Being the farthest thing back,
-// this is what sells "you are looking *into* a jungle" rather than at a strip.
-function addCanopy(anim) {
-  const w = anim.width();
-  const rows = Math.max(2, anim.skyRows - 1);
-  const grid = Array.from({ length: rows }, () => new Array(w).fill(' '));
-
-  // A fringe, not a roof: clumps along the top with short drips.
-  for (let x = 0; x < w; x++) {
-    if (Math.random() < 0.55) grid[0][x] = pick(['@', '%', '&']);
-  }
-  const drips = Math.floor(w / 8);
-  for (let f = 0; f < drips; f++) {
-    const x = Math.floor(Math.random() * w);
-    const len = 1 + Math.floor(Math.random() * Math.max(1, rows - 1));
-    for (let r = 1; r <= len && r < rows; r++) {
-      grid[r][x] = pick(['@', '%', '*']);
-      if (Math.random() < 0.3 && x + 1 < w) grid[r][x + 1] = pick(['@', '%']);
-    }
-  }
-
-  const lines = grid.map((r) => r.join(''));
-  const mask = lines.map((l) =>
-    l.replace(/[^ ]/g, () => (Math.random() < 0.4 ? 'G' : 'g')));
-  anim.newEntity({
-    name: 'canopy',
-    type: 'scenery',
-    shape: lines.join('\n'),
-    color: mask.join('\n'),
-    position: [0, 0, DEPTH.canopy],
-    defaultColor: 'g',
-    autoTrans: true,
-  });
-}
-
-// A few shafts of light between the leaves.
-function addSky(anim) {
-  const w = anim.width();
-  const rows = anim.skyRows;
-  const lines = [];
-  for (let r = 0; r < rows; r++) {
-    let l = '';
-    for (let x = 0; x < w; x++) l += Math.random() < 0.04 ? '.' : ' ';
-    lines.push(l);
-  }
-  anim.newEntity({
-    name: 'sky',
-    type: 'scenery',
-    shape: lines.join('\n'),
-    position: [0, 0, DEPTH.sky],
-    defaultColor: 'Y',
-    autoTrans: true,
-  });
-}
-
 // Tall grass across the very bottom — the closest thing to the viewer, and the
 // last cue that the scene has depth.
 function addForeground(anim) {
@@ -251,73 +195,27 @@ function addForeground(anim) {
   });
 }
 
-// Lianas dropping out of the canopy toward the path. Two columns plus the
-// odd leaf so they read as ropes, not stray punctuation. They stop above
-// the giraffe crown so the acting stage stays readable.
+// A couple of lianas hanging off the path tree, not out of the sky.
+// Monkeys grip these; the sky stays for sun and clouds.
 function addVines(anim) {
-  const w = anim.width();
-  // Reach at least to swingY so a monkey's hands meet a real vine.
-  const startY = Math.max(1, anim.skyRows - 1);
-  const stopY = Math.max(
-    anim.world.swingY + 3,
-    anim.world.groundY - GIRAFFE_BROWSE_HEIGHT - 1
-  );
-  const maxLen = stopY - startY;
-  if (maxLen < 3) return;
-  const n = Math.max(3, Math.floor(w / 18));
-  const minLen = Math.max(4, anim.world.swingY - startY + 2);
-  for (let i = 0; i < n; i++) {
-    const x = 2 + Math.floor(Math.random() * (w - 6));
-    const extra = Math.max(0, maxLen - minLen);
-    const len = minLen + Math.floor(Math.random() * (extra + 1));
+  const treeX = anim.world.features.treeX;
+  const startY = Math.max(2, anim.world.groundY - GIRAFFE_BROWSE_HEIGHT);
+  const endY = Math.max(startY + 5, anim.world.swingY + 3);
+  const len = endY - startY;
+  if (len < 3) return;
+  const xs = [treeX - 3, treeX + 4];
+  for (let i = 0; i < xs.length; i++) {
     const lines = [];
-    const mask = [];
-    for (let r = 0; r < len; r++) {
-      const leaf = Math.random() < 0.22;
-      lines.push(leaf ? pick(['@@', '%@', '@&', '\\@']) : pick(['||', '/|', '|\\', ') |', '|(']));
-      mask.push(leaf ? 'GG' : 'gg');
-    }
+    for (let r = 0; r < len; r++) lines.push(r % 3 === 1 ? '/|' : '||');
     anim.newEntity({
       name: `vine-${i}`,
       type: 'scenery',
       shape: lines.join('\n'),
-      color: mask.join('\n'),
-      position: [x, startY, DEPTH.canopy - 1],
+      position: [xs[i], startY, anim.world.z.scenery - 1],
       defaultColor: 'g',
-      shade: 'dim',
       autoTrans: true,
     });
-    if (anim.world.swings) anim.world.swings.push(x);
-  }
-}
-
-// Floating leaf masses in the gap between canopy and path. No extra ground
-// line — they hang. This is what fills a 32-inch window.
-function addMidFoliage(anim) {
-  const top = Math.max(2, anim.skyRows - 3);
-  const bot = anim.world.groundY - GIRAFFE_BROWSE_HEIGHT - 2;
-  if (bot - top < 5) return;
-  const blobs = [
-    '  __/@@\\__  \n /@@@@@@@@\\ \n|@@@@@@@@@@|\n \\_@@@@@@_/ ',
-    '   _/@@@\\_   \n _/@@@@@@@\\_ \n/@@@@@@@@@@@\\\n\\_@@@@@@@@@_/\n  \\_@@@@@_/  ',
-    ' @@@%@@@ \n@@@@@@@@@\n %@@@@@% ',
-  ];
-  const n = Math.max(2, Math.floor(anim.width() / 28));
-  for (let i = 0; i < n; i++) {
-    const art = pick(blobs);
-    const rows = art.split('\n');
-    const x = Math.floor(Math.random() * Math.max(1, anim.width() - 16));
-    const y = top + Math.floor(Math.random() * Math.max(1, bot - top - rows.length));
-    anim.newEntity({
-      name: `midleaf-${i}`,
-      type: 'scenery',
-      shape: art,
-      color: art.replace(/[@%]/g, 'G').replace(/[^G \n]/g, 'g'),
-      position: [x, y, DEPTH.backdrop],
-      defaultColor: 'g',
-      shade: 'dim',
-      autoTrans: true,
-    });
+    if (anim.world.swings) anim.world.swings.push(xs[i]);
   }
 }
 
@@ -327,7 +225,8 @@ function addMidFoliage(anim) {
 function addBackdropTrees(anim) {
   const w = anim.width();
   const groundY = anim.world.groundY;
-  const crownTop = Math.max(2, Math.floor(anim.skyRows * 0.45));
+  // Crowns sit below the sky so they don't bury the sun.
+  const crownTop = Math.max(anim.skyRows + 6, Math.floor(anim.height() * 0.28));
   const height = groundY - crownTop;
   if (anim.height() < 32 || height < 16) return;
 
@@ -369,61 +268,95 @@ function addBackdropTrees(anim) {
 
 function addSun(anim) {
   const art = [
-    '  \\|/  ',
-    ' --*-- ',
-    '  /|\\  ',
+    '    \\  |  /    ',
+    '     \\ | /     ',
+    '  ----(@@@)----',
+    '     / | \\     ',
+    '    /  |  \\    ',
   ].join('\n');
   anim.newEntity({
     name: 'sun',
     type: 'scenery',
     shape: art,
-    position: [Math.max(2, anim.width() - 12), 0, DEPTH.sky - 2],
+    position: [Math.max(1, anim.width() - 18), 0, DEPTH.skyDecor],
     defaultColor: 'Y',
     autoTrans: true,
   });
 }
 
-const BIRD_A = ' \n/v\\';
-const BIRD_B = '\n\\^/';
+const CLOUD = [
+  '    .--.    ',
+  ' .-(    ).  ',
+  '(___.__.__)',
+].join('\n');
 
-function flap(e, anim) {
+function drift(e, anim) {
   e.physX += e.dx;
   e.physFrame += e.frameSpeed;
   e.x = Math.floor(e.physX);
-  if (e.dx > 0 && e.x > anim.width()) e.physX = -3;
+  if (e.dx > 0 && e.x > anim.width()) e.physX = -e.width();
   if (e.dx < 0 && e.x + e.width() < 0) e.physX = anim.width();
   e.x = Math.floor(e.physX);
 }
 
-function addBirds(anim) {
-  const n = Math.max(2, Math.floor(anim.width() / 40));
-  const yMax = Math.max(2, anim.skyRows + 1);
+function addClouds(anim) {
+  const n = Math.max(2, Math.floor(anim.width() / 36));
   for (let i = 0; i < n; i++) {
-    const right = Math.random() < 0.5;
+    anim.newEntity({
+      name: `cloud-${i}`,
+      type: 'scenery',
+      shape: CLOUD,
+      position: [
+        Math.floor((i + 0.3) * (anim.width() / n)),
+        1 + (i % 2),
+        DEPTH.skyDecor + 1,
+      ],
+      callbackArgs: [0.06, 0, 0, 0],
+      callback: drift,
+      defaultColor: 'W',
+      autoTrans: true,
+    });
+  }
+}
+
+const BIRD_UP = `
+  \\   /
+   \\./
+    v
+`;
+const BIRD_DN = `
+ \\___/
+  \\./
+   v
+`;
+
+function addBirds(anim) {
+  const n = Math.max(3, Math.floor(anim.width() / 28));
+  const yMax = Math.max(3, anim.skyRows + 3);
+  for (let i = 0; i < n; i++) {
+    const right = i % 2 === 0;
     anim.newEntity({
       name: `bird-${i}`,
       type: 'scenery',
-      shape: [BIRD_A, BIRD_B],
+      shape: [BIRD_UP, BIRD_DN],
       position: [
         Math.floor(Math.random() * anim.width()),
         1 + Math.floor(Math.random() * yMax),
-        DEPTH.sky - 5,
+        DEPTH.skyDecor,
       ],
-      callbackArgs: [right ? 0.35 : -0.35, 0, 0, 0.18],
-      callback: flap,
-      defaultColor: 'k',
+      callbackArgs: [right ? 0.45 : -0.4, 0, 0, 0.22],
+      callback: drift,
+      defaultColor: 'W',
       autoTrans: true,
     });
   }
 }
 
 function addScenery(anim) {
-  addSky(anim);
   addSun(anim);
+  addClouds(anim);
   addBirds(anim);
-  addCanopy(anim);
   addVines(anim);
-  addMidFoliage(anim);
   addBackdropTrees(anim);
   addGround(anim);
   addShrubs(anim);

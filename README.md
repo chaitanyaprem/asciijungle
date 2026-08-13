@@ -36,8 +36,8 @@ Flags: `--calm` (only the animal keys summon; other keys do nothing), `--mute`, 
 ## Depth
 
 One scene: one ground line, one waterhole, one browse-height tree, one
-bamboo clump. Sky stays open for a sun and birds; a thin canopy and a
-few vines hang into it. Animals share the path in front of the set.
+bamboo clump. The top of the screen is sky — sun, clouds, birds — not
+a roof of vines. A couple of lianas hang off the path tree for monkeys.
 
 Two animals on the same ground line still blob if they overlap, so they
 don't. Same-direction walkers wait. Head-on traffic steps onto a dimmer
@@ -95,13 +95,9 @@ Most of the animals are archive ASCII art rather than anything drawn here:
 - **panda** (sitting): "Bear face" by Joan G. Stark, via the
   [ASCII Art Archive](https://www.asciiart.eu/animals/bears), with a seated
   body added so it can hold bamboo
-- **lion**: by "snd", via [ascii.co.uk/art/lion](https://ascii.co.uk/art/lion),
-  with a derived resting pose
 - **hedgehog**: by "ejm", via
   [ascii.co.uk/art/hedgehog](https://ascii.co.uk/art/hedgehog)
-- **monkey** (sitting): adapted from "ejm97", via
-  [ascii.co.uk/art/monkey](https://ascii.co.uk/art/monkey)
-- **giraffe**, **walking panda**, **walking monkey**, **crocodile**, scenery:
+- **giraffe**, **lion**, **crocodile**, **monkey**, walking panda, scenery:
   drawn for this project
 
 Artists' signatures have been removed from the sprites; credit belongs here,
