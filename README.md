@@ -35,20 +35,16 @@ Flags: `--calm` (only `e`/`g`/`p` do anything), `--mute`, `--check-sound`.
 
 ## Depth
 
-The jungle is drawn in three horizontal bands, each at a different distance.
-A band owns everything that makes its animals read as near or far:
+One scene: one ground line, one waterhole, one tall tree, one bamboo clump.
+Animals share the path and sit in front of the set. Depth is z-order, not
+three stacked copies of the jungle.
 
-- **ground line**: farther bands sit higher up the screen
-- **shade**: far is faint, middle is normal, near is bold
-- **parallax**: far animals amble, near animals stride
-- **z-order**: near bands and their scenery occlude far ones
+Two animals on the same ground line still blob if they overlap, so they
+don't. Same-direction walkers wait. Head-on traffic steps onto a dimmer
+row just above the path and drops back when the gap is clear. Landmarks
+are exclusive — one drinker at the water, one browser at the tree.
 
-Every animal is drawn at one size. The depth comes entirely from the band, so
-adding an animal means drawing it once, not three times.
-
-Each band has its own waterhole, tall tree and bamboo clump, so an animal
-always drinks or browses at something in its own slice of the world rather
-than walking into scenery a hundred feet behind it.
+A terminal's width sets how many bodies fit (usually 3–4), not a band count.
 
 ## Behaviour
 
@@ -67,11 +63,9 @@ Roughly one animal in five walks straight past without stopping. That variety
 matters more than it sounds. If every elephant stopped at every waterhole the
 scene would feel like a machine rather than a jungle.
 
-**One animal per band, always.** Two animals sharing a band walk through each
-other and merge into an unreadable pile — same z-plane, both opaque, neither
-yielding. Species also walk at different speeds, so a faster one eventually
-catches a slower one even when they start far apart. A summon takes over the
-band whose animal was nearest to leaving.
+A key adds an animal until the path is full. After that a summon only
+retires someone who was already leaving (or walking past) so a drink in
+progress usually survives.
 
 Species are chosen by picking whichever is currently rarest on screen, not by
 an independent random draw. A uniform draw looks fair and isn't: with three
@@ -126,8 +120,8 @@ asciijungle.js       entry: argv, terminal setup, tick loop, keys
 src/
   engine.js          Entity + Animation, shape/mask parsing, renderer
   colors.js          ANSI colour tokens, including the dim tier
-  depth.js           z-plane assignment per band
-  world.js           band geometry, feature placement
+  depth.js           z-plane (path, shoulder, scenery)
+  world.js           one path, landmarks, occupancy
   scenery.js         canopy, ground, waterholes, trees, bamboo, grass
   animal.js          walk → act → leave state machine
   artkit.js          mirror / shiftRow / spliceRow / unsign

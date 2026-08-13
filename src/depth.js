@@ -1,41 +1,29 @@
 'use strict';
 
-// Z-depth: lower = closer to viewer (drawn last / on top), same convention as
-// the aquarium engine's painter's algorithm.
+// Z-depth: lower = closer to viewer (drawn last / on top). Same convention
+// as the aquarium engine's painter's algorithm.
 //
-// The jungle is built from horizontal depth *bands*. Each band owns a slice of
-// the z range so that everything in a nearer band — scenery included — occludes
-// everything in a farther one:
+// One scene, not stacked bands:
 //
 //   z  0   overlay text
-//   z  2   foreground grass fringe (closest thing on screen)
-//   z 10   NEAR animals      z 12  NEAR scenery
-//   z 20   MID  animals      z 22  MID  scenery
-//   z 30   FAR  animals      z 32  FAR  scenery
+//   z  2   foreground grass
+//   z 10   path animals
+//   z 16   shoulder animals (pass-behind)
+//   z 20   scenery (tree, water, bamboo, ground)
 //   z 40   canopy
 //   z 50   sky
 //
-// bandZ(i) gives the animal plane for band i (0 = farthest). Scenery sits two
-// steps behind its own band's animals, so an elephant walks in front of the
-// trees it shares a band with but behind the trees of the band in front.
+// Path animals sit in front of the set. A head-on pass steps onto the
+// shoulder plane — one row up, dimmer, behind the other animal — then
+// drops back when the x-ranges separate.
 const DEPTH = {
   overlay: 0,
   foreground: 2,
+  animal: 10,
+  shoulder: 16,
+  scenery: 20,
   canopy: 40,
   sky: 50,
 };
 
-const BAND_STRIDE = 10;
-const NEAREST_BAND_Z = 10;
-
-// i counts from the back: 0 = farthest. bandCount tells us how far to push it.
-function bandZ(i, bandCount) {
-  const fromFront = bandCount - 1 - i;
-  return NEAREST_BAND_Z + fromFront * BAND_STRIDE;
-}
-
-function sceneryZ(i, bandCount) {
-  return bandZ(i, bandCount) + 2;
-}
-
-module.exports = { DEPTH, bandZ, sceneryZ, BAND_STRIDE };
+module.exports = { DEPTH };

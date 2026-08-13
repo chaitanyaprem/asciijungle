@@ -36,7 +36,7 @@ function typeCounts(anim) {
 // An independent uniform draw looks fair and isn't: with three species and
 // three startup spawns it produced one of each only 22% of the time, and three
 // of the *same* species 11% of the time. Watching three identical pandas
-// plod across three bands is the first thing you notice, and it's the first
+// plod across the path is the first thing you notice, and it's the first
 // thing anyone reported.
 function randomAnimal(anim, opts) {
   const counts = typeCounts(anim);

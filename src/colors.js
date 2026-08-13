@@ -4,16 +4,15 @@
 //             m/M magenta, w/W white, k/K black. Upper = bright/bold.
 const COLOR_CODE = { k: 30, r: 31, g: 32, y: 33, b: 34, m: 35, c: 36, w: 37 };
 
-// A rendered cell's colour is a *token*, not just a mask letter, so depth
-// bands can shade the same art three ways without separate sprites:
+// A rendered cell's colour is a *token*, not just a mask letter, so a
+// pass-behind can shade the same art dimmer without a second sprite:
 //
 //   'g'   normal green   (mask letter, lowercase)
 //   'G'   bright green   (mask letter, uppercase)
-//   '-g'  faint green    (leading '-' = SGR 2, used by the far band)
+//   '-g'  faint green    (leading '-' = SGR 2, used by the shoulder lane)
 //
-// shade() folds a band's tier into whatever the mask asked for. This is the
-// whole "one art size, three depths" trick: near animals are bold, mid are
-// normal, far are faint, and the eye reads that as distance.
+// shade() folds a depth tier into whatever the mask asked for. Path animals
+// stay at the mask colour; a pass-behind is dimmed.
 function shade(code, tier) {
   if (!code || code === ' ') return code;
   if (tier === 'dim') return '-' + code.toLowerCase();

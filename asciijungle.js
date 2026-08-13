@@ -2,12 +2,12 @@
 // asciijungle — a 3D-ish ASCII jungle for very small people.
 //
 // Built on the render engine from asciiquarium-js (Node port of Kirk Baucom's
-// Perl asciiquarium). Depth comes from horizontal bands: see src/world.js.
+// Perl asciiquarium). One shared path, not stacked bands: see src/world.js.
 
 'use strict';
 
 const { Animation } = require('./src/engine');
-const { buildBands, freeBands } = require('./src/world');
+const { buildWorld, canAdd, occupants, maxAnimals } = require('./src/world');
 const { addScenery } = require('./src/scenery');
 const { randomAnimal, summonByKey, ANIMALS } = require('./src/random');
 const sound = require('./src/sound');
@@ -95,12 +95,12 @@ function main() {
   function build() {
     anim.updateTermSize();
     anim.removeAllEntities();
-    buildBands(anim);
+    buildWorld(anim);
     addScenery(anim);
-    // One animal per band, already in view. randomAnimal picks the rarest
-    // species and a free band each time, so the opening cast is one of each
-    // rather than three of the same thing in three rows.
-    for (let i = 0; i < anim.bands.length; i++) randomAnimal(anim, { onScreen: true });
+    // A few already in view so the jungle isn't empty for twenty seconds.
+    // Keys add more up to maxAnimals; ambient refill only tops up to two.
+    const opening = Math.min(3, maxAnimals(anim));
+    for (let i = 0; i < opening; i++) randomAnimal(anim, { onScreen: true });
     anim.redrawScreen();
   }
 
@@ -125,10 +125,10 @@ function main() {
   const tick = () => {
     if (rebuild) { build(); rebuild = false; return; }
 
-    // Refill a band shortly after its animal leaves, so the jungle is worth
-    // watching with nobody touching the keyboard.
+    // Quiet refill: keep at least a couple of animals wandering if nobody
+    // is mashing keys. Summons fill the rest of the seats.
     sinceSpawn += 1;
-    if (sinceSpawn > 18 && freeBands(anim).length) {
+    if (sinceSpawn > 18 && occupants(anim).length < 2 && canAdd(anim)) {
       if (randomAnimal(anim, {})) sinceSpawn = 0;
     }
 

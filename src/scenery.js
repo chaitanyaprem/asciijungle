@@ -2,10 +2,9 @@
 
 const { DEPTH } = require('./depth');
 
-// The scenery is generated rather than hand-drawn, because band heights depend
-// on the terminal size — a tall tree has to reach from its band's ground line
-// up to where a browsing giraffe's head will be, and that distance isn't known
-// until we know how many bands fit.
+// The scenery is generated rather than hand-drawn: the tree has to reach from
+// the single ground line up to where a browsing giraffe's head will be, and
+// that distance isn't known until we know the terminal height.
 
 function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
 
@@ -21,28 +20,27 @@ function groundLine(w) {
   return s;
 }
 
-function addGround(anim, band) {
+function addGround(anim) {
   const w = anim.width();
   const art = groundLine(w);
   anim.newEntity({
-    name: `ground-${band.i}`,
+    name: 'ground',
     type: 'scenery',
     shape: art,
     color: 'g'.repeat(w),
-    position: [0, band.groundY, band.sceneryZ],
+    position: [0, anim.world.groundY, anim.world.z.scenery],
     defaultColor: 'g',
-    shade: band.shade,
   });
 }
 
 // ──────────────────────────── waterhole ───────────────────────────
 // Sits flush with the ground line so a drinking elephant's trunk lands in it.
-function addWaterhole(anim, band) {
+function addWaterhole(anim) {
   const width = Math.max(9, Math.floor(anim.width() * 0.11));
   const surface = '~'.repeat(width);
   const rim = '\\' + '_'.repeat(width) + '/';
   anim.newEntity({
-    name: `waterhole-${band.i}`,
+    name: 'waterhole',
     type: 'scenery',
     // Two nearly-identical ripple frames. An alternate frame of solid '-'
     // reads as a road rather than water, so the shimmer stays subtle.
@@ -54,10 +52,13 @@ function addWaterhole(anim, band) {
       ' ' + 'c'.repeat(width) + ' \n' + 'b'.repeat(width + 2),
       ' ' + 'C'.repeat(width) + ' \n' + 'b'.repeat(width + 2),
     ],
-    position: [band.features.waterX - Math.floor(width / 2), band.groundY, band.sceneryZ - 1],
+    position: [
+      anim.world.features.waterX - Math.floor(width / 2),
+      anim.world.groundY,
+      anim.world.z.scenery - 1,
+    ],
     callbackArgs: [0, 0, 0, 0.05],
     defaultColor: 'c',
-    shade: band.shade,
     autoTrans: true,
   });
 }
@@ -67,8 +68,11 @@ function addWaterhole(anim, band) {
 // the trunk with its neck up has its head among the leaves.
 const GIRAFFE_BROWSE_HEIGHT = 11;
 
-function addTallTree(anim, band) {
-  const reach = Math.max(4, Math.min(GIRAFFE_BROWSE_HEIGHT, band.height + 2));
+function addTallTree(anim) {
+  // Stretch the trunk to the canopy so the column reads as one jungle, not
+  // a tree sitting in a blank warehouse.
+  const room = anim.world.groundY - anim.skyRows;
+  const reach = Math.max(GIRAFFE_BROWSE_HEIGHT, room);
   const crown = [
     '   __/\\__   ',
     ' _/@@@@@@\\_ ',
@@ -84,13 +88,16 @@ function addTallTree(anim, band) {
     mask.push('    y  y    ');
   }
   anim.newEntity({
-    name: `tree-${band.i}`,
+    name: 'tree',
     type: 'scenery',
     shape: lines.join('\n'),
     color: mask.join('\n'),
-    position: [band.features.treeX - 6, band.groundY - lines.length, band.sceneryZ],
+    position: [
+      anim.world.features.treeX - 6,
+      anim.world.groundY - lines.length,
+      anim.world.z.scenery,
+    ],
     defaultColor: 'g',
-    shade: band.shade,
     autoTrans: true,
   });
 }
@@ -98,7 +105,7 @@ function addTallTree(anim, band) {
 // ───────────────────────────── bamboo ─────────────────────────────
 // The panda's target. Stalks of slightly different heights so the clump has a
 // silhouette instead of reading as a barcode.
-function addBamboo(anim, band) {
+function addBamboo(anim) {
   const stalks = 5;
   const heights = [];
   for (let i = 0; i < stalks; i++) heights.push(4 + Math.floor(Math.random() * 3));
@@ -117,13 +124,16 @@ function addBamboo(anim, band) {
     mask.push(m);
   }
   anim.newEntity({
-    name: `bamboo-${band.i}`,
+    name: 'bamboo',
     type: 'scenery',
     shape: lines.join('\n'),
     color: mask.join('\n'),
-    position: [band.features.bambooX - stalks, band.groundY - tall, band.sceneryZ],
+    position: [
+      anim.world.features.bambooX - stalks,
+      anim.world.groundY - tall,
+      anim.world.z.scenery,
+    ],
     defaultColor: 'g',
-    shade: band.shade,
     autoTrans: true,
   });
 }
@@ -136,23 +146,23 @@ const SHRUBS = [
   '  \\|/  \n   |   ',
 ];
 
-function addShrubs(anim, band) {
+function addShrubs(anim) {
   const w = anim.width();
-  const n = Math.max(3, Math.floor(w / 22));
-  const avoid = [band.features.waterX, band.features.treeX, band.features.bambooX];
+  const n = Math.max(2, Math.floor(w / 28));
+  const f = anim.world.features;
+  const avoid = [f.waterX, f.treeX, f.bambooX];
   for (let i = 0; i < n; i++) {
     const x = Math.floor(Math.random() * (w - 8));
     if (avoid.some((a) => Math.abs(a - x) < 10)) continue;
     const art = pick(SHRUBS);
     const rows = art.split('\n');
     anim.newEntity({
-      name: `shrub-${band.i}-${i}`,
+      name: `shrub-${i}`,
       type: 'scenery',
       shape: art,
       color: art.replace(/[@%]/g, 'G').replace(/[\\|/]/g, 'g').replace(/,/g, 'G'),
-      position: [x, band.groundY - rows.length, band.sceneryZ],
+      position: [x, anim.world.groundY - rows.length, anim.world.z.scenery],
       defaultColor: 'g',
-      shade: band.shade,
       autoTrans: true,
     });
   }
@@ -244,13 +254,11 @@ function addForeground(anim) {
 function addScenery(anim) {
   addSky(anim);
   addCanopy(anim);
-  for (const band of anim.bands) {
-    addGround(anim, band);
-    addShrubs(anim, band);
-    addTallTree(anim, band);
-    addBamboo(anim, band);
-    addWaterhole(anim, band);
-  }
+  addGround(anim);
+  addShrubs(anim);
+  addTallTree(anim);
+  addBamboo(anim);
+  addWaterhole(anim);
   addForeground(anim);
 }
 
