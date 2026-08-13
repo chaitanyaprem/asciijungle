@@ -21,10 +21,11 @@ function maxAnimals(anim) {
 function buildWorld(anim) {
   const w = anim.width();
   const h = anim.height();
-  // Giraffe browse is ~12 rows; keep a little sky and one grass row in front.
-  // Canopy eats the top; the tree fills whatever is left above the path so
-  // a 36-row window isn't twenty rows of empty air.
-  const skyRows = Math.min(8, Math.max(3, Math.floor(h * 0.20)));
+  // Leave ~14 rows for the path and the giraffe-scale tree. Everything
+  // above that is hanging forest — otherwise a 50-row window is a strip
+  // of dirt under a postage-stamp canopy.
+  const reserved = 14;
+  const skyRows = Math.max(3, Math.min(h - reserved, Math.floor(h * 0.42)));
   const groundY = Math.max(skyRows + 12, h - 2);
 
   anim.world = {

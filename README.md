@@ -35,9 +35,10 @@ Flags: `--calm` (only the animal keys summon; other keys do nothing), `--mute`, 
 
 ## Depth
 
-One scene: one ground line, one waterhole, one tall tree, one bamboo clump.
-Animals share the path and sit in front of the set. Depth is z-order, not
-three stacked copies of the jungle.
+One scene: one ground line, one waterhole, one browse-height tree, one
+bamboo clump. A tall window fills with hanging canopy, vines, and dim
+backdrop trees — not extra floors. Animals share the path in front of
+the set.
 
 Two animals on the same ground line still blob if they overlap, so they
 don't. Same-direction walkers wait. Head-on traffic steps onto a dimmer

@@ -179,20 +179,18 @@ function addCanopy(anim) {
   const rows = Math.max(2, anim.skyRows - 1);
   const grid = Array.from({ length: rows }, () => new Array(w).fill(' '));
 
-  // Per-cell randomness reads as television static. Leaves have to hang in
-  // clumps: a solid band along the very top, then fringes of varying length
-  // dangling from it, which is what the eye expects from a canopy edge.
-  for (let x = 0; x < w; x++) {
-    if (Math.random() < 0.92) grid[0][x] = pick(['@', '@', '@', '%', '&']);
-  }
-  const fringes = Math.floor(w / 3);
-  for (let f = 0; f < fringes; f++) {
-    const x = Math.floor(Math.random() * w);
-    const len = 1 + Math.floor(Math.random() * (rows - 1));
-    for (let r = 1; r <= len && r < rows; r++) {
-      grid[r][x] = pick(['@', '%', '&', '*']);
-      // Widen the odd fringe into a small clump so it isn't all single strands.
-      if (Math.random() < 0.35 && x + 1 < w) grid[r][x + 1] = pick(['@', '%']);
+  // Dense at the top, thinning as it hangs. Per-cell static reads as noise;
+  // clumps of 2–4 columns are what the eye accepts as foliage.
+  const densityAt = (r) => Math.max(0.08, 0.88 - (r / Math.max(1, rows)) * 0.75);
+  for (let r = 0; r < rows; r++) {
+    let x = 0;
+    while (x < w) {
+      if (Math.random() > densityAt(r)) { x += 1; continue; }
+      const span = 1 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < span && x + i < w; i++) {
+        grid[r][x + i] = pick(['@', '@', '%', '&', '*']);
+      }
+      x += span + (Math.random() < 0.4 ? 0 : 1);
     }
   }
 
@@ -254,9 +252,120 @@ function addForeground(anim) {
   });
 }
 
+// Lianas dropping out of the canopy toward the path. Two columns plus the
+// odd leaf so they read as ropes, not stray punctuation. They stop above
+// the giraffe crown so the acting stage stays readable.
+function addVines(anim) {
+  const w = anim.width();
+  const startY = Math.max(1, anim.skyRows - 2);
+  const stopY = anim.world.groundY - GIRAFFE_BROWSE_HEIGHT - 1;
+  const maxLen = stopY - startY;
+  if (maxLen < 3) return;
+  const n = Math.max(4, Math.floor(w / 10));
+  for (let i = 0; i < n; i++) {
+    const x = 2 + Math.floor(Math.random() * (w - 6));
+    const len = 4 + Math.floor(Math.random() * maxLen);
+    const lines = [];
+    const mask = [];
+    for (let r = 0; r < len; r++) {
+      const leaf = Math.random() < 0.22;
+      lines.push(leaf ? pick(['@@', '%@', '@&', '\\@']) : pick(['||', '/|', '|\\', ') |', '|(']));
+      mask.push(leaf ? 'GG' : 'gg');
+    }
+    anim.newEntity({
+      name: `vine-${i}`,
+      type: 'scenery',
+      shape: lines.join('\n'),
+      color: mask.join('\n'),
+      position: [x, startY, DEPTH.canopy - 1],
+      defaultColor: 'g',
+      shade: 'dim',
+      autoTrans: true,
+    });
+  }
+}
+
+// Floating leaf masses in the gap between canopy and path. No extra ground
+// line — they hang. This is what fills a 32-inch window.
+function addMidFoliage(anim) {
+  const top = Math.max(2, anim.skyRows - 3);
+  const bot = anim.world.groundY - GIRAFFE_BROWSE_HEIGHT - 2;
+  if (bot - top < 5) return;
+  const blobs = [
+    '  __/@@\\__  \n /@@@@@@@@\\ \n|@@@@@@@@@@|\n \\_@@@@@@_/ ',
+    '   _/@@@\\_   \n _/@@@@@@@\\_ \n/@@@@@@@@@@@\\\n\\_@@@@@@@@@_/\n  \\_@@@@@_/  ',
+    ' @@@%@@@ \n@@@@@@@@@\n %@@@@@% ',
+  ];
+  const n = Math.max(5, Math.floor(anim.width() / 12));
+  for (let i = 0; i < n; i++) {
+    const art = pick(blobs);
+    const rows = art.split('\n');
+    const x = Math.floor(Math.random() * Math.max(1, anim.width() - 16));
+    const y = top + Math.floor(Math.random() * Math.max(1, bot - top - rows.length));
+    anim.newEntity({
+      name: `midleaf-${i}`,
+      type: 'scenery',
+      shape: art,
+      color: art.replace(/[@%]/g, 'G').replace(/[^G \n]/g, 'g'),
+      position: [x, y, DEPTH.backdrop],
+      defaultColor: 'g',
+      shade: 'dim',
+      autoTrans: true,
+    });
+  }
+}
+
+// Trees that reach the canopy. Dim, behind the path set — they fill the
+// column on a tall monitor without becoming a second floor or the giraffe's
+// browse target.
+function addBackdropTrees(anim) {
+  const w = anim.width();
+  const groundY = anim.world.groundY;
+  const crownTop = Math.max(2, Math.floor(anim.skyRows * 0.45));
+  const height = groundY - crownTop;
+  if (height < 16) return;
+
+  const crown = [
+    '     ____/\\____     ',
+    '  __/@@@@@@@@@@\\__  ',
+    ' /@@@@@@@@@@@@@@@@\\ ',
+    '|@@@@@@@@@@@@@@@@@@|',
+    ' \\_@@@@@@@@@@@@@@_/ ',
+    '   \\_@@@@@@@@@@_/   ',
+    '     \\_@@@@@@_/     ',
+  ];
+  // Sides only — a third trunk in the middle fights the giraffe tree.
+  const xs = [
+    Math.floor(w * 0.10),
+    Math.floor(w * 0.90),
+  ];
+  for (let i = 0; i < xs.length; i++) {
+    const trunkRows = Math.max(2, height - crown.length);
+    const lines = crown.slice();
+    const mask = crown.map((r) => r.replace(/@/g, 'G').replace(/[^G ]/g, 'g'));
+    for (let t = 0; t < trunkRows; t++) {
+      lines.push(t % 4 === 2 ? '      ,@||@,        ' : '        |  |        ');
+      mask.push(t % 4 === 2 ? '      Gg yG         ' : '        y  y        ');
+    }
+    anim.newEntity({
+      name: `backdrop-${i}`,
+      type: 'scenery',
+      shape: lines.join('\n'),
+      color: mask.join('\n'),
+      position: [xs[i] - 10, groundY - lines.length, DEPTH.backdrop],
+      defaultColor: 'g',
+      shade: 'dim',
+      autoTrans: true,
+    });
+  }
+}
+
 function addScenery(anim) {
   addSky(anim);
   addCanopy(anim);
+  addVines(anim);
+  addMidFoliage(anim);
+  addBackdropTrees(anim);
   addGround(anim);
   addShrubs(anim);
   addTallTree(anim);
