@@ -3,23 +3,24 @@
 const animal = require('../animal');
 const { mirror, shiftRow, lines, widthOf } = require('../artkit');
 
-// Crocodile. Short enough to read as one animal, not a train: snout, eye,
-// ridged back, a few feet. The old 38-column walk smeared into the ground
-// line. Lurk is just eyes and bumps on the water.
+// Crocodile. Head and back from Shanaka Dias (snd), via
+// ascii.co.uk/art/crocodile — the 00 eyes and V: V legs are what
+// carry it. Tail trimmed so it fits the path; signature stripped.
 const WALK_R_A = `
-         __
-   ./\\/\\(oo)______
-  <~-~-~-~-~-~-~-'
-     n    n    n
+              .-._   _ _ _ _ _
+   .-''-.__.-'00  '-' ' ' ' '-.
+   '.___ '    .   .--_'-' '-' '
+    V: V 'vv-'     '_   '
+      '=.____.=_.--'
 `;
 
-const WALK_R_B = shiftRow(WALK_R_A, -1, 1);
+const WALK_R_B = shiftRow(WALK_R_A, -2, 1);
 const WALK_L_A = mirror(WALK_R_A);
-const WALK_L_B = shiftRow(WALK_L_A, -1, 1);
+const WALK_L_B = shiftRow(WALK_L_A, -2, 1);
 
 const LURK_R = `
-      (oo)
-  ~~~~n~~n~~~~
+      .-'00 '-.
+   ~~~'~~~~~~~'~~~
 `;
 
 const LURK_L = mirror(LURK_R);
@@ -35,7 +36,7 @@ const spec = {
   actTicks: 120,
   actChance: 0.9,
   sink: 1,
-  anchorRight: 8,
+  anchorRight: 12,
   anchorLeft: null,
   art: {
     walkRight: [WALK_R_A, WALK_R_B],

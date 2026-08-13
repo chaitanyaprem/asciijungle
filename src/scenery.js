@@ -335,17 +335,22 @@ function addClouds(anim) {
   }
 }
 
-// Side-on flyer: head, beak, body, a wing that beats. The old \ / v
-// read as a tick mark, not a bird.
+// llizard's small flyer from asciiart.eu/animals/birds-land — the (o>
+// silhouette is the one that actually reads as a bird. Frame B drops
+// the top wing so it beats. Initials stripped; credit in the README.
 const BIRD_R_UP = `
-      _
-   __(o)>
-    /  \\
+ \\\\
+ (o>
+ \\\\_//)
+  \\_/_)
+   _|_
 `;
 const BIRD_R_DN = `
-      _
-_____(o)>
-     V V
+  \\\\
+  (o>
+ //_//)
+  \\_/_)
+   _|_
 `;
 const BIRD_L_UP = mirror(BIRD_R_UP);
 const BIRD_L_DN = mirror(BIRD_R_DN);
