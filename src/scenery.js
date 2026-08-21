@@ -1,7 +1,6 @@
 'use strict';
 
 const { DEPTH } = require('./depth');
-const { mirror } = require('./artkit');
 const { addSwing } = require('./world');
 
 // The scenery is generated rather than hand-drawn: the tree has to reach from
@@ -318,6 +317,10 @@ function drift(e, anim) {
   if (e.dx > 0 && e.x > anim.width()) e.physX = -e.width();
   if (e.dx < 0 && e.x + e.width() < 0) e.physX = anim.width();
   e.x = Math.floor(e.physX);
+  if (e.baseY != null) {
+    e.physY = e.baseY + Math.sin(e.physX * 0.18) * 1.1;
+    e.y = Math.floor(e.physY);
+  }
 }
 
 function addClouds(anim) {
@@ -340,38 +343,43 @@ function addClouds(anim) {
   }
 }
 
-// llizard's small flyer from asciiart.eu/animals/birds-land — the (o>
-// silhouette is the one that actually reads as a bird. Frame B drops
-// the top wing so it beats. Initials stripped; credit in the README.
-const BIRD_R_UP = `
- \\\\
- (o>
- \\\\_//)
-  \\_/_)
-   _|_
-`;
-const BIRD_R_DN = `
-  \\\\
-  (o>
- //_//)
-  \\_/_)
-   _|_
-`;
-const BIRD_L_UP = mirror(BIRD_R_UP);
-const BIRD_L_DN = mirror(BIRD_R_DN);
+// Side-on flyers, no legs. The archive land-bird had _|_ feet so a
+// flock in the sky read as walking. Wings beat around a stable body;
+// drift() bobs physY so they don't ride a wire.
+const BIRD_R_UP = [
+  '   /\\ ',
+  ' -(o)>',
+  '   \\/ ',
+].join('\n');
+const BIRD_R_DN = [
+  '      ',
+  ' -(o)>',
+  '  /  \\',
+].join('\n');
+const BIRD_L_UP = [
+  ' /\\   ',
+  '<(o)- ',
+  ' \\/   ',
+].join('\n');
+const BIRD_L_DN = [
+  '      ',
+  '<(o)- ',
+  '/  \\  ',
+].join('\n');
 
 function addBirds(anim) {
   const n = Math.max(3, Math.floor(anim.width() / 28));
   const yMax = Math.max(3, anim.skyRows + 3);
   for (let i = 0; i < n; i++) {
     const right = i % 2 === 0;
-    anim.newEntity({
+    const y = 1 + Math.floor(Math.random() * yMax);
+    const e = anim.newEntity({
       name: `bird-${i}`,
       type: 'scenery',
       shape: right ? [BIRD_R_UP, BIRD_R_DN] : [BIRD_L_UP, BIRD_L_DN],
       position: [
         Math.floor(Math.random() * anim.width()),
-        1 + Math.floor(Math.random() * yMax),
+        y,
         DEPTH.skyDecor,
       ],
       callbackArgs: [right ? 0.45 : -0.4, 0, 0, 0.2],
@@ -379,6 +387,7 @@ function addBirds(anim) {
       defaultColor: 'W',
       autoTrans: true,
     });
+    e.baseY = y;
   }
 }
 
