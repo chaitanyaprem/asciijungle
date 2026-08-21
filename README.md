@@ -110,9 +110,9 @@ not walking across the screen.
 Archive art comes as a single static pose facing one direction, which is not
 what an animation needs. `src/artkit.js` closes that gap: `mirror()` flips a
 drawing and swaps its directional glyphs, `shiftRow()` nudges the foot row to
-make a second walk frame, `spliceRow()` grafts on a straightened trunk. So a
-found drawing gets its opposite direction and its walk cycle derived rather
-than redrawn.
+make a second walk frame. So a found drawing gets its opposite direction and
+its walk cycle derived rather than redrawn. The elephant's drinking pose is
+drawn with the trunk unrolled, not spliced onto the walk.
 
 ## Layout
 

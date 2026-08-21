@@ -1,7 +1,7 @@
 'use strict';
 
 const animal = require('../animal');
-const { mirror, shiftRow, spliceRow, lines, widthOf } = require('../artkit');
+const { mirror, shiftRow, lines, widthOf } = require('../artkit');
 
 // Base drawing: "Elephant" by Rowan Crawford, from the ASCII Art Archive
 // (asciiart.eu/animals/elephants). Faces left. The artist's "-Row" signature
@@ -9,8 +9,10 @@ const { mirror, shiftRow, spliceRow, lines, widthOf } = require('../artkit');
 // README, and the jungle draws its own ground.
 //
 // Everything else here is derived rather than redrawn: the right-facing set is
-// mirror()ed, the second walk frame is the same art with the foot row nudged,
-// and the drinking pose grafts a straight trunk onto the standing pose.
+// mirror()ed and the second walk frame is the same art with the foot row
+// nudged. The drinking pose is the standing body with the curled trunk unrolled
+// down from the face into a U-tip — splicing a pipe over the curl left the old
+// trunk sitting next to a disconnected vertical line.
 const STAND_L = `
          ___     _,.--.,_
       .-~   ~--"~-.   ._ "-.
@@ -25,15 +27,22 @@ const STAND_L = `
             [nn[nn..][nn..]
 `;
 
-// Curled trunk straightened out and dropped to the baseline. The tip sits at
-// column 1, which is what anchorLeft points the waterhole at.
-const DRINK_L = [
-  [6, 0, ' |'],
-  [7, 1, '|_'],
-  [8, 1, '|'],
-  [9, 1, '|'],
-  [10, 1, 'U'],
-].reduce((art, [row, col, s]) => spliceRow(art, row, col, s), STAND_L);
+// Trunk hangs from the face (the \. join under lq p) down to a U on its own
+// row so sink:1 can drop the tip into the water without moving the feet.
+const DRINK_L = `
+         ___     _,.--.,_
+      .-~   ~--"~-.   ._ "-.
+     /      ./_    Y    "-. \\
+    Y       :~     !         Y
+    lq p    |     /         .|
+     \\. .-, l    /          |j
+     |  |/   \\_/";          !
+     |  .-~\\  .  ~\\.      ./
+     |      Y_ Y_. "vr"~  T
+     |      (  (    |L    j
+     |      [nn[nn..][nn..]
+     U
+`;
 
 const WALK_L_A = STAND_L;
 const WALK_L_B = shiftRow(STAND_L, 10, 1);
@@ -52,9 +61,10 @@ const spec = {
   actFrameSpeed: 0.08,
   actTicks: 55,
   actChance: 0.8,
+  sink: 1,
   // Trunk-tip column in each drink pose, so it lands in the water. The
   // right-facing value is derived from the mirror: width - 1 - anchorLeft.
-  anchorLeft: 1,
+  anchorLeft: 5,
   anchorRight: null, // filled in below, once we know the mirrored width
   art: {
     walkRight: [WALK_R_A, WALK_R_B],
