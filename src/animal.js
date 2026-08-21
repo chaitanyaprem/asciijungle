@@ -327,14 +327,15 @@ function step(e, anim) {
     // Only one animal steps aside: right-facing on a head-on, rear animal
     // if already fused. Same-direction approach (not yet overlapping): wait.
     const stepAside = e.lane === 'path' && !shoulderTaken(anim, e) && (
-      (headOn && e.facingRight) || (stuck && rear)
+      (headOn && e.facingRight) || (stuck && rear) || hit.state === ACT
     );
     if (stepAside) setLane(e, anim, 'shoulder');
     else {
-      // Already fused and can't take the shoulder: back up so we unstick
-      // instead of standing inside the other animal until it leaves.
-      if (stuck) {
-        e.physX -= Math.sign(e.dx || e.baseDx) * 2;
+      // Fused and can't take the shoulder: only the rear animal yields a
+      // little so we unstick. Backing up the front one walked crocodiles
+      // (and anyone they fused with) backwards across the path.
+      if (stuck && rear) {
+        e.physX -= Math.sign(e.dx || e.baseDx);
         e.x = Math.floor(e.physX);
       }
       e.physFrame += e.frameSpeed;
