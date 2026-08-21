@@ -3,15 +3,13 @@
 const animal = require('../animal');
 const { mirror, shiftRow, lines, widthOf } = require('../artkit');
 
-// Crocodile. Drawn to read at a glance while walking right: tail, body,
-// 00 eyes, snout leading. The archive piece faced the wrong way in walkRight
-// (snout on the left) so a right-going croc looked like it was reversing, and
-// the lurk pose was only a pair of eyes.
+// Crocodile. Low and ridged so it cannot be read as a rocket: scutes along
+// the back, 00 eyes on the head, a short snout, wavy jaw, V legs. The
+// previous walk was a diamond tail + smooth fuselage + > nose cone.
 const WALK_R_A = `
-  ___
- /   \\        ____
-/     \\_____/  00  \\
- \\__________________>
+                    .-.
+  .--.--.--.--.--.(00)-.
+ ( ~~ ~~ ~~ ~~ ~~    -.
    V    V    V    V
 `;
 
@@ -19,12 +17,11 @@ const WALK_R_B = shiftRow(WALK_R_A, -1, 1);
 const WALK_L_A = mirror(WALK_R_A);
 const WALK_L_B = shiftRow(WALK_L_A, -1, 1);
 
-// Same silhouette in the water, so standing up does not jump 13 columns
-// wider and fuse with whoever is on the path.
+// Same length as the walk, body in the water, eyes still showing.
 const LURK_R = `
-  ___        ____
- /   \\_____/  00  \\
-~~~~ ~~ ~~~~ ~~ ~~~~
+                    .-.
+  .--.--.--.--.--.(00)-.
+~~~~ ~~ ~~ ~~ ~~ ~~ ~~~
 `;
 
 const LURK_L = mirror(LURK_R);
@@ -41,7 +38,7 @@ const spec = {
   actChance: 0.9,
   sink: 1,
   // Eye column in the lurk pose, so the head sits on the waterhole.
-  anchorRight: 14,
+  anchorRight: 19,
   anchorLeft: null,
   art: {
     walkRight: [WALK_R_A, WALK_R_B],
