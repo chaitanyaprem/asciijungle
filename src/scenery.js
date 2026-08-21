@@ -288,17 +288,18 @@ function addGrove(anim) {
 
 function addSun(anim) {
   const art = [
-    '    \\  |  /    ',
-    '     \\ | /     ',
-    '  ----(@@@)----',
-    '     / | \\     ',
-    '    /  |  \\    ',
+    '       \\   |   /      ',
+    '        \\  |  /       ',
+    '    \\     |||     /   ',
+    '   -----(@@@@@)-----  ',
+    '        /  |  \\       ',
+    '       /   |   \\      ',
   ].join('\n');
   anim.newEntity({
     name: 'sun',
     type: 'scenery',
     shape: art,
-    position: [Math.max(1, anim.width() - 18), 0, DEPTH.skyDecor],
+    position: [Math.max(1, anim.width() - 24), 0, DEPTH.skyDecor],
     defaultColor: 'Y',
     autoTrans: true,
   });
