@@ -94,7 +94,11 @@ Most of the animals are archive ASCII art rather than anything drawn here:
   [ASCII Art Archive](https://www.asciiart.eu/animals/elephants)
 - **hedgehog**: by "ejm", via
   [ascii.co.uk/art/hedgehog](https://ascii.co.uk/art/hedgehog)
-- **crocodile**, **giraffe**, **lion**, **monkey**, **panda**, birds, scenery:
+- **crocodile**: Shanaka Dias (snd), via
+  [ascii.co.uk/art/crocodile](https://ascii.co.uk/art/crocodile), tail curl
+  trimmed; original faces left, so that is the left-walk and the right-walk
+  is mirrored
+- **giraffe**, **lion**, **monkey**, **panda**, birds, scenery:
   drawn for this project
 
 Artists' signatures have been removed from the sprites; credit belongs here,

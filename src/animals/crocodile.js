@@ -3,28 +3,34 @@
 const animal = require('../animal');
 const { mirror, shiftRow, lines, widthOf } = require('../artkit');
 
-// Crocodile. Low and ridged so it cannot be read as a rocket: scutes along
-// the back, 00 eyes on the head, a short snout, wavy jaw, V legs. The
-// previous walk was a diamond tail + smooth fuselage + > nose cone.
-const WALK_R_A = `
-                    .-.
-  .--.--.--.--.--.(00)-.
- ( ~~ ~~ ~~ ~~ ~~    -.
-   V    V    V    V
+// Crocodile by Shanaka Dias (snd), via ascii.co.uk/art/crocodile.
+// Original faces left — that is walkLeft. walkRight is mirrored so the
+// snout leads. Putting the original in walkRight made it moonwalk.
+// Tail curl trimmed to fit the path; signature stripped. Lurk is the
+// same head and back, legs replaced with water, so standing up does
+// not jump width and fuse with whoever is on the path.
+const WALK_L_A = `
+              .-._   _ _ _ _ _
+   .-''-.__.-'00  '-' ' ' ' '-.
+   '.___ '    .   .--_'-' '-' '
+    V: V 'vv-'     '_   '
+      '=.____.=_.--'
 `;
 
-const WALK_R_B = shiftRow(WALK_R_A, -1, 1);
-const WALK_L_A = mirror(WALK_R_A);
-const WALK_L_B = shiftRow(WALK_L_A, -1, 1);
+const WALK_L_B = shiftRow(WALK_L_A, -2, 1);
+// Quotes in this piece are scallops, not direction. mirror() turns them
+// into backticks; put the quotes back so the right-walk stays readable.
+function unbacktick(art) { return art.replace(/`/g, "'"); }
+const WALK_R_A = unbacktick(mirror(WALK_L_A));
+const WALK_R_B = shiftRow(WALK_R_A, -2, 1);
 
-// Same length as the walk, body in the water, eyes still showing.
-const LURK_R = `
-                    .-.
-  .--.--.--.--.--.(00)-.
-~~~~ ~~ ~~ ~~ ~~ ~~ ~~~
-`;
-
-const LURK_L = mirror(LURK_R);
+const walkW = widthOf(lines(WALK_L_A));
+const LURK_L = [
+  lines(WALK_L_A)[0],
+  lines(WALK_L_A)[1],
+  '~'.repeat(walkW),
+].join('\n');
+const LURK_R = unbacktick(mirror(LURK_L));
 
 const spec = {
   type: 'crocodile',
@@ -37,9 +43,9 @@ const spec = {
   actTicks: 120,
   actChance: 0.9,
   sink: 1,
-  // Eye column in the lurk pose, so the head sits on the waterhole.
-  anchorRight: 19,
+  // 00-eye column in the lurk pose, so the head sits on the waterhole.
   anchorLeft: null,
+  anchorRight: null,
   art: {
     walkRight: [WALK_R_A, WALK_R_B],
     walkLeft: [WALK_L_A, WALK_L_B],
@@ -48,7 +54,11 @@ const spec = {
   },
 };
 
-spec.anchorLeft = widthOf(lines(LURK_R)) - 1 - spec.anchorRight;
+{
+  const lurk = lines(LURK_L);
+  spec.anchorLeft = lurk[1].indexOf('00');
+  spec.anchorRight = widthOf(lurk) - 1 - spec.anchorLeft;
+}
 
 function addCrocodile(anim, opts) {
   return animal.spawn(anim, spec, opts);
