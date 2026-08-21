@@ -357,8 +357,8 @@ function step(e, anim) {
       } else {
         const actSet = artFor(e.prepared, ACT, e.facingRight);
         const actW = actSet.frames[0].width;
-        // Panda sit is 31 columns. Switching into it on a crowded path
-        // swallows whoever is standing next to the bamboo.
+        // A wider act pose on a crowded path swallows whoever is
+        // standing next to the landmark.
         if (!roomAt(anim, e.x, actW, e, 'path')) {
           e.targetX = null;
           e.featureKey = null;

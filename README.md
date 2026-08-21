@@ -92,14 +92,11 @@ Most of the animals are archive ASCII art rather than anything drawn here:
 
 - **elephant**: "Elephant" by Rowan Crawford, via the
   [ASCII Art Archive](https://www.asciiart.eu/animals/elephants)
-- **panda** (sitting): "Bear face" by Joan G. Stark, via the
-  [ASCII Art Archive](https://www.asciiart.eu/animals/bears), with a seated
-  body added so it can hold bamboo
 - **hedgehog**: by "ejm", via
   [ascii.co.uk/art/hedgehog](https://ascii.co.uk/art/hedgehog)
 - **birds**: llizard's flyer, via the
   [ASCII Art Archive](https://www.asciiart.eu/animals/birds-land)
-- **crocodile**, **giraffe**, **lion**, **monkey**, walking panda, scenery:
+- **crocodile**, **giraffe**, **lion**, **monkey**, **panda**, scenery:
   drawn for this project
 
 Artists' signatures have been removed from the sprites; credit belongs here,

@@ -6,9 +6,10 @@ const { mirror, shiftRow, lines } = require('../artkit');
 // Panda. Everything that says "panda" lives in the face — black ears, eye
 // patches — so the walking pose turns the head toward the viewer, cartoon
 // style, while the body stays in profile. A pure side view showed one plain
-// eye and read as a generic bear-blob. The face deliberately echoes the
-// sitting pose ({0 0} eye patches, # ears) so both poses read as the same
-// animal.
+// eye and read as a generic bear-blob. The sitting pose uses the same face
+// so both read as the same animal; the old Joan Stark bear-face sit was
+// 12 rows and twice the walk width, so a seated panda looked like a giant
+// still bear.
 const WALK_R_A = `
                _       _
     __________(#)_____(#)
@@ -22,23 +23,13 @@ const WALK_R_B = shiftRow(WALK_R_A, -1, 1);
 const WALK_L_A = mirror(WALK_R_A);
 const WALK_L_B = shiftRow(WALK_L_A, -1, 1);
 
-// Sitting pose: the face is "Bear face" by Joan G. Stark, from the ASCII Art
-// Archive (asciiart.eu/animals/bears), with her "jgs" signature removed and a
-// simple seated body, paws and bamboo stalk added underneath — the archive
-// piece is a face only, so it can't sit down on its own.
 const SIT = `
-    .--.              .--.
-   : (\\ ". _......_ ." /) :
-    '.    \`        \`    .'
-     /'   _        _   \`\\
-    /     0}      {0     \\
-   |       /      \\       |
-    \\   | .  .==.  . |   /
-     '._ \\.' \\__/ './ _.'  \\|/
-     /  \`\`'._-''-_.'\`\`  \\   |
-   |      __        __     |  |
-    \\____/  \\______/  \\____/  |
-     |_|                |_|   |
+       _     _
+     _(#)___(#)_
+    /  {0   0}  \\
+   |    .__.     |
+    \\  (    )   /  \\|/
+     |#|    |#|     |
 `;
 
 const spec = {
@@ -55,8 +46,8 @@ const spec = {
   // sitting pose, so measuring beats counting columns by hand.
   anchorRight: null,
   anchorLeft: null,
-  // Nudge right so the 31-wide sit pose clears the tall tree that stands
-  // between the trunk and the bamboo — at -7 the panda sat inside the crown.
+  // Nudge right so the sit pose clears the tall tree that stands between
+  // the trunk and the bamboo.
   featureOffset: 2,
   art: {
     walkRight: [WALK_R_A, WALK_R_B],
