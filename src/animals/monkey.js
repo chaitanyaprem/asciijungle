@@ -1,7 +1,6 @@
 'use strict';
 
 const animal = require('../animal');
-const { mirror } = require('../artkit');
 
 // Monkey. Hangs on a vine (the || is the grip, lined up with a real liana)
 // and hops vine-to-vine. A smooth glide across empty air read as flying.
@@ -19,15 +18,21 @@ const HANG_B = `
      / \\
 `;
 
-// Leap: trailing body, leading hand still on a vine glyph.
+// Leap: no vine glyph — a || in the air read as ziplining. Reach toward
+// the next perch; hang art still has the grip for when they land.
+// Hand-drawn both ways so the body stays under the hang || (col 6);
+// mirror() would strip the padding and snap the sprite sideways.
 const LEAP_R = `
-   ||
-    \\\\o
-    ( )
-     \\\\
+     \\o-
+     ( )
+     / \\
 `;
 
-const LEAP_L = mirror(LEAP_R);
+const LEAP_L = `
+     -o/
+     ( )
+     / \\
+`;
 
 const spec = {
   type: 'monkey',
@@ -36,7 +41,7 @@ const spec = {
   feature: 'swing',
   defaultColor: 'y',
   baseSpeed: 1.2,
-  leapSpeed: 1.4,
+  leapSpeed: 1.0,
   frameSpeed: 0.35,
   actFrameSpeed: 0.2,
   actTicks: 40,

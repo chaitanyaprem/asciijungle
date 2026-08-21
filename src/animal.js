@@ -285,7 +285,7 @@ function step(e, anim) {
       let t = span === 0 ? 1 : (e.physX - e.leapFromX) / span;
       t = Math.max(0, Math.min(1, t));
       e.groundY = e.leapFromY + (e.leapToY - e.leapFromY) * t;
-      e.physY = e.groundY - e.height() - Math.round(Math.sin(t * Math.PI) * 2);
+      e.physY = e.groundY - e.height() - Math.round(Math.sin(t * Math.PI) * 3);
       e.y = Math.floor(e.physY);
     }
     if (e.state === WALK && e.targetX != null) {

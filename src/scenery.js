@@ -273,10 +273,14 @@ function addGroveTree(anim, x, totalH) {
 function addGrove(anim) {
   const w = anim.width();
   // Slots sit between water (0.22), browse tree (0.50) and bamboo (0.78).
-  const slots = w >= 90
-    ? [0.10, 0.34, 0.64, 0.90]
-    : [0.12, 0.36, 0.88];
-  const heights = [8, 14, 10, 16];
+  // Count grows with the terminal so monkeys hop crown-to-crown instead of
+  // gliding a long empty gap (the 0.50–0.88 stretch on an 80-col screen).
+  const slots = w >= 110
+    ? [0.08, 0.18, 0.34, 0.64, 0.90]
+    : w >= 70
+      ? [0.10, 0.34, 0.64, 0.90]
+      : [0.12, 0.36, 0.88];
+  const heights = [8, 14, 10, 16, 12];
   for (let i = 0; i < slots.length; i++) {
     addGroveTree(anim, Math.floor(w * slots[i]), heights[i % heights.length]);
   }
