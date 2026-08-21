@@ -27,21 +27,23 @@ const STAND_L = `
             [nn[nn..][nn..]
 `;
 
-// Trunk hangs from the face (the \. join under lq p) down to a U on its own
-// row so sink:1 can drop the tip into the water without moving the feet.
+// Trunk unrolls from the snout (just left of lq p) as a tube, then a
+// drop into the water. A single | against the chest |/ read as a broken
+// pole, not a trunk. Extra U row + sink:1 puts the tip in the water
+// without moving the feet.
 const DRINK_L = `
          ___     _,.--.,_
       .-~   ~--"~-.   ._ "-.
      /      ./_    Y    "-. \\
     Y       :~     !         Y
     lq p    |     /         .|
-     \\. .-, l    /          |j
-     |  |/   \\_/";          !
-     |  .-~\\  .  ~\\.      ./
-     |      Y_ Y_. "vr"~  T
-     |      (  (    |L    j
-     |      [nn[nn..][nn..]
-     U
+   /\\   .-, l    /          |j
+  (  )  |/   \\_/";          !
+   \\/   .-~\\  .  ~\\.      ./
+   |        Y_ Y_. "vr"~  T
+   |        (  (    |L    j
+   |        [nn[nn..][nn..]
+   U
 `;
 
 const WALK_L_A = STAND_L;
@@ -64,7 +66,7 @@ const spec = {
   sink: 1,
   // Trunk-tip column in each drink pose, so it lands in the water. The
   // right-facing value is derived from the mirror: width - 1 - anchorLeft.
-  anchorLeft: 5,
+  anchorLeft: 3,
   anchorRight: null, // filled in below, once we know the mirrored width
   art: {
     walkRight: [WALK_R_A, WALK_R_B],
