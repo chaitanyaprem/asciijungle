@@ -286,19 +286,22 @@ function addGrove(anim) {
 }
 
 function addSun(anim) {
+  // Classic ASCII sun: round core, \ | / and - rays, a few sparkle dots.
+  // The (@@@@@) blob with extra ||| read as a gear, not a sun.
   const art = [
-    '       \\   |   /      ',
-    '        \\  |  /       ',
-    '    \\     |||     /   ',
-    '   -----(@@@@@)-----  ',
-    '        /  |  \\       ',
-    '       /   |   \\      ',
+    '      \\   |   /     ',
+    '       \\  |  /      ',
+    '     .  \\ | /  .    ',
+    '    --- ( o ) ---   ',
+    '     \'  / | \\  \'    ',
+    '       /  |  \\      ',
+    '      /   |   \\     ',
   ].join('\n');
   anim.newEntity({
     name: 'sun',
     type: 'scenery',
     shape: art,
-    position: [Math.max(1, anim.width() - 24), 0, DEPTH.skyDecor],
+    position: [Math.max(1, anim.width() - 22), 0, DEPTH.skyDecor],
     defaultColor: 'Y',
     autoTrans: true,
   });
