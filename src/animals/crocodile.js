@@ -5,17 +5,17 @@ const { mirror, shiftRow, lines, widthOf } = require('../artkit');
 
 // Crocodile by Shanaka Dias (snd), via ascii.co.uk/art/crocodile.
 // Original faces left — that is walkLeft. walkRight is mirrored so the
-// snout leads. Putting the original in walkRight made it moonwalk.
-// Tail curl trimmed to fit the path; signature stripped. Lurk is the
-// same head and back, legs replaced with water, so standing up does
-// not jump width and fuse with whoever is on the path.
-const WALK_L_A = `
-              .-._   _ _ _ _ _
-   .-''-.__.-'00  '-' ' ' ' '-.
-   '.___ '    .   .--_'-' '-' '
-    V: V 'vv-'     '_   '
-      '=.____.=_.--'
-`;
+// snout leads. The vertical tail-curl under the feet is omitted so the
+// V: V legs stay on the ground; the body and tail along the path are
+// the full standing pose. Signature stripped. Lurk is the same head
+// and back in the water, same width, so standing up does not jump size.
+const WALK_L_A = [
+  "                    .-._   _ _ _ _ _ _ _ _",
+  "         .-''-.__.-'00  '-' ' ' ' ' ' ' ' '-.",
+  "         '.___ '    .   .--_'-' '-' '-' _'-' '._",
+  "          V: V 'vv-'   '_   '.       .'  _..' '.'.",
+  "            '=.____.=_.--'   :_.__.__:_   '.   : :",
+].join('\n');
 
 const WALK_L_B = shiftRow(WALK_L_A, -2, 1);
 // Quotes in this piece are scallops, not direction. mirror() turns them
@@ -24,11 +24,11 @@ function unbacktick(art) { return art.replace(/`/g, "'"); }
 const WALK_R_A = unbacktick(mirror(WALK_L_A));
 const WALK_R_B = shiftRow(WALK_R_A, -2, 1);
 
-const walkW = widthOf(lines(WALK_L_A));
+const walkLines = lines(WALK_L_A);
 const LURK_L = [
-  lines(WALK_L_A)[0],
-  lines(WALK_L_A)[1],
-  '~'.repeat(walkW),
+  walkLines[0],
+  walkLines[1],
+  walkLines[2].replace(/[^\s]/g, '~'),
 ].join('\n');
 const LURK_R = unbacktick(mirror(LURK_L));
 

@@ -95,9 +95,10 @@ Most of the animals are archive ASCII art rather than anything drawn here:
 - **hedgehog**: by "ejm", via
   [ascii.co.uk/art/hedgehog](https://ascii.co.uk/art/hedgehog)
 - **crocodile**: Shanaka Dias (snd), via
-  [ascii.co.uk/art/crocodile](https://ascii.co.uk/art/crocodile), tail curl
-  trimmed; original faces left, so that is the left-walk and the right-walk
-  is mirrored
+  [ascii.co.uk/art/crocodile](https://ascii.co.uk/art/crocodile); standing
+  pose is the full body, vertical tail-curl under the feet omitted so the
+  legs stay on the ground; original faces left, so that is the left-walk
+  and the right-walk is mirrored
 - **giraffe**, **lion**, **monkey**, **panda**, birds, scenery:
   drawn for this project
 
