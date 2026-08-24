@@ -92,6 +92,9 @@ Most of the animals are archive ASCII art rather than anything drawn here:
 
 - **elephant**: "Elephant" by Rowan Crawford, via the
   [ASCII Art Archive](https://www.asciiart.eu/animals/elephants)
+- **panda**: b'ger (Joris Bellenger), via alt.ascii-art (the small
+  round panda Joan Stark posted as a favourite); background dots and
+  signature stripped
 - **hedgehog**: by "ejm", via
   [ascii.co.uk/art/hedgehog](https://ascii.co.uk/art/hedgehog)
 - **crocodile**: Shanaka Dias (snd), via
@@ -99,7 +102,7 @@ Most of the animals are archive ASCII art rather than anything drawn here:
   pose is the full body, vertical tail-curl under the feet omitted so the
   legs stay on the ground; original faces left, so that is the left-walk
   and the right-walk is mirrored
-- **giraffe**, **lion**, **monkey**, **panda**, birds, scenery:
+- **giraffe**, **lion**, **monkey**, birds, scenery:
   drawn for this project
 
 Artists' signatures have been removed from the sprites; credit belongs here,
