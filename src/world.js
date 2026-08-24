@@ -117,22 +117,16 @@ function findClearX(anim, preferred, w, facingRight, except, lane) {
   return null;
 }
 
-// Find a gap, retiring the cheapest animals if `force` (a keypress must
-// produce a visible animal). Retire-and-rescan, don't carve a hole at a
-// fixed x — that used to kill the whole cast to fit one crocodile.
+// Find a gap. force (a keypress) used to keep retiring until a body-sized
+// hole existed — a 50-column crocodile emptied the path. Count-based retire
+// in spawn() already swaps one animal when the path is full. If there is
+// still no gap, spawn at the edge and let yield/shoulder unstick overlap.
 function ensureClearX(anim, preferred, w, facingRight, force, lane) {
-  let x = findClearX(anim, preferred, w, facingRight, null, lane);
+  const x = findClearX(anim, preferred, w, facingRight, null, lane);
   if (x != null) return x;
   if (!force) return null;
-  let guard = occupants(anim).length;
-  while (guard--) {
-    const v = cheapestToRetire(anim, lane);
-    if (!v) break;
-    v.alive = false;
-    x = findClearX(anim, preferred, w, facingRight, null, lane);
-    if (x != null) return x;
-  }
-  return null;
+  const width = anim.width();
+  return Math.max(0, Math.min(preferred, width - w));
 }
 
 function swingList(anim) {

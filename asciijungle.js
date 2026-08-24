@@ -97,9 +97,10 @@ function main() {
     anim.removeAllEntities();
     buildWorld(anim);
     addScenery(anim);
-    // A few already in view so the jungle isn't empty for twenty seconds.
-    // Keys add more up to maxAnimals; ambient refill only tops up to two.
-    const opening = Math.min(3, maxAnimals(anim));
+    // A couple already in view so the jungle isn't empty. Leave a free
+    // seat so the first keys add, instead of immediately swapping someone.
+    // Ambient refill only tops up to two.
+    const opening = Math.min(2, maxAnimals(anim));
     for (let i = 0; i < opening; i++) randomAnimal(anim, { onScreen: true });
     anim.redrawScreen();
   }
