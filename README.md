@@ -92,9 +92,8 @@ Most of the animals are archive ASCII art rather than anything drawn here:
 
 - **elephant**: "Elephant" by Rowan Crawford, via the
   [ASCII Art Archive](https://www.asciiart.eu/animals/elephants)
-- **panda**: b'ger (Joris Bellenger), via alt.ascii-art (the small
-  round panda Joan Stark posted as a favourite); background dots and
-  signature stripped
+- **panda**: BluePard, via alt.ascii-art (May 1998); the "BP" mark on
+  the chin stripped
 - **hedgehog**: by "ejm", via
   [ascii.co.uk/art/hedgehog](https://ascii.co.uk/art/hedgehog)
 - **crocodile**: Shanaka Dias (snd), via
