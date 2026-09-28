@@ -117,10 +117,9 @@ function findClearX(anim, preferred, w, facingRight, except, lane) {
   return null;
 }
 
-// Find a gap. force (a keypress) used to keep retiring until a body-sized
-// hole existed — a 50-column crocodile emptied the path. Count-based retire
-// in spawn() already swaps one animal when the path is full. If there is
-// still no gap, spawn at the edge and let yield/shoulder unstick overlap.
+// Find a gap. With force (a keypress) and no gap, spawn at the edge anyway
+// and let yield/shoulder unstick overlap. spawn() has already checked the
+// path has a free seat.
 function ensureClearX(anim, preferred, w, facingRight, force, lane) {
   const x = findClearX(anim, preferred, w, facingRight, null, lane);
   if (x != null) return x;
@@ -167,43 +166,7 @@ function nextSwing(anim, fromX, facingRight) {
   return undefined;
 }
 
-function distanceToExit(anim, e) {
-  return e.dx >= 0 ? anim.width() - e.x : e.x + e.width();
-}
-
-function summonCost(e) {
-  if (e.state === 'leave') return 0;
-  if (e.state === 'walk' && e.targetX == null) return 1;
-  if (e.state === 'walk') return 2;
-  return 3;
-}
-
-// When the path is full and a summon must still produce an animal, retire
-// whoever loses least: leavers, then walk-pasts, then approaches, then acts.
-function cheapestToRetire(anim, lane) {
-  let best = null, bestKey = Infinity;
-  for (const e of occupants(anim)) {
-    if (lane && (e.lane || 'path') !== lane) continue;
-    const cost = summonCost(e);
-    let tie;
-    if (cost === 2 && e.targetX != null) {
-      tie = Math.max(0, 9999 - Math.abs(e.targetX - e.x));
-    } else if (cost === 3) {
-      tie = e.actLeft != null ? e.actLeft : 0;
-    } else {
-      tie = distanceToExit(anim, e);
-    }
-    const key = cost * 10000 + tie;
-    if (key < bestKey) { bestKey = key; best = e; }
-  }
-  // Never bump a mid-act animal. A full path of drinkers stays put; the
-  // keypress is refused rather than cancelling a drink.
-  if (best && summonCost(best) === 3) return null;
-  return best;
-}
-
 module.exports = {
   buildWorld, occupants, canAdd, maxAnimals, roomAt, blockerAt, shoulderTaken,
-  featureBusy, addSwing, pickSwing, pickSwingX, nextSwing, findClearX, ensureClearX, cheapestToRetire,
-  distanceToExit, summonCost,
+  featureBusy, addSwing, pickSwing, pickSwingX, nextSwing, findClearX, ensureClearX,
 };

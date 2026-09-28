@@ -116,10 +116,9 @@ function main() {
     // ('\x1b[C') must not summon a crocodile.
     if (raw.startsWith('\x1b')) return;
 
-    // force + atEdge: a summon always produces an animal, and that animal is
-    // visible in full the instant the key goes down. Silently ignoring the
-    // key, or answering it with one column of pixels, is the worst possible
-    // response to a toddler pressing it.
+    // force + atEdge: if there is a free seat, the animal is visible in full
+    // the instant the key goes down rather than creeping in one column at a
+    // time. A full path ignores the key; nobody on screen gets swapped out.
     const summonOpts = { announce: true, force: true, atEdge: true };
     // Fast mashing can deliver several keys in one chunk; take each one.
     for (const k of raw.toLowerCase()) {

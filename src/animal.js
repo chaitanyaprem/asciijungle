@@ -2,7 +2,7 @@
 
 const { parseShape, parseMask } = require('./engine');
 const {
-  canAdd, cheapestToRetire, blockerAt, shoulderTaken, featureBusy,
+  canAdd, blockerAt, shoulderTaken, featureBusy,
   ensureClearX, roomAt, pickSwing, nextSwing,
 } = require('./world');
 const sound = require('./sound');
@@ -72,12 +72,9 @@ function spawn(anim, spec, opts = {}) {
   if (!world) return null;
 
   const lane = spec.lane || 'path';
-  if (!canAdd(anim, lane)) {
-    if (!opts.force) return null;
-    const victim = cheapestToRetire(anim, lane);
-    if (victim) victim.alive = false;
-    else return null;
-  }
+  // A full path refuses the newcomer, keypress or not. Swapping someone
+  // out made animals vanish under a mashing hand.
+  if (!canAdd(anim, lane)) return null;
 
   const prepared = spec._prepared || (spec._prepared = prepare(spec));
   let featureKey = spec.feature == null ? null : spec.feature;

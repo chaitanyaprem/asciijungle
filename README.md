@@ -63,18 +63,18 @@ Roughly one animal in five walks straight past without stopping. That variety
 matters more than it sounds. If every elephant stopped at every waterhole the
 scene would feel like a machine rather than a jungle.
 
-A key adds an animal until the path is full. After that it retires a
-leaver or a walk-past; if everyone is still walking toward a landmark,
-the least-invested one goes. A drink in progress is never cancelled. If
-the path is all mid-act, the key is ignored.
+A key adds an animal until the path is full. After that the key does
+nothing until someone walks off. Nobody on screen is ever swapped out for
+a newcomer. The path holds one animal per 24 columns of terminal, between
+2 and 4; monkeys swing overhead and have their own limit of 2.
 
 Species are chosen by picking whichever is currently rarest on screen, not by
 an independent random draw. A uniform draw looks fair and isn't: with three
 species and three opening spawns it produced one of each only 22% of the time,
 and three of the *same* species 11% of the time.
 
-A summoned animal appears in full at the screen edge straight away. The
-opening cast starts mid-screen. Only ambient arrivals walk in from off-screen,
+A summoned animal that fits appears in full at the screen edge straight
+away. The opening cast starts mid-screen. Only ambient arrivals walk in from off-screen,
 which takes 12-20 seconds and is fine when nobody is waiting on it.
 
 ## Sound
