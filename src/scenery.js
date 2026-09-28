@@ -408,4 +408,7 @@ function addScenery(anim) {
   addForeground(anim);
 }
 
-module.exports = { addScenery };
+module.exports = {
+  addScenery, drift,
+  BIRD_RIGHT: [BIRD_R_UP, BIRD_R_DN], BIRD_LEFT: [BIRD_L_UP, BIRD_L_DN],
+};

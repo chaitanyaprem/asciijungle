@@ -82,6 +82,39 @@ function play(name) {
   } catch {}
 }
 
+// Speech: treats (butterfly, rainbow…) have no clip, so their name is
+// said instead. `say` ships with macOS; the rest are Linux.
+const VOICES = [
+  { cmd: 'say', args: (t) => ['-r', '150', t] },
+  { cmd: 'espeak-ng', args: (t) => ['-s', '130', t] },
+  { cmd: 'espeak', args: (t) => ['-s', '130', t] },
+  { cmd: 'spd-say', args: (t) => ['-w', '-r', '-20', t] },
+];
+
+let voice;
+let speaking = null;
+
+function resolveVoice() {
+  if (voice !== undefined) return voice;
+  voice = VOICES.find((v) => which(v.cmd)) || null;
+  return voice;
+}
+
+// One voice at a time and no queue: a mashed key would otherwise stack up
+// a minute of names.
+function say(text) {
+  if (!enabled || speaking) return;
+  const v = resolveVoice();
+  if (!v) return;
+  try {
+    const child = spawn(v.cmd, v.args(text), { stdio: 'ignore', detached: false });
+    speaking = child;
+    const done = () => { if (speaking === child) speaking = null; };
+    child.on('exit', done);
+    child.on('error', done);
+  } catch {}
+}
+
 function setEnabled(v) { enabled = !!v; }
 function isEnabled() { return enabled; }
 
@@ -91,13 +124,15 @@ function status() {
   const names = fs.existsSync(SOUND_DIR)
     ? fs.readdirSync(SOUND_DIR).filter((f) => /\.(wav|m4a|mp3|aiff|ogg)$/i.test(f))
     : [];
-  return { player: p ? p.cmd : null, dir: SOUND_DIR, files: names };
+  const v = resolveVoice();
+  return { player: p ? p.cmd : null, voice: v ? v.cmd : null, dir: SOUND_DIR, files: names };
 }
 
 // Kill anything still playing so Ctrl+C doesn't leave a roar hanging.
 function stopAll() {
   for (const c of running) { try { c.kill(); } catch {} }
   running.clear();
+  if (speaking) { try { speaking.kill(); } catch {} }
 }
 
-module.exports = { play, setEnabled, isEnabled, status, stopAll, SOUND_DIR };
+module.exports = { play, say, setEnabled, isEnabled, status, stopAll, SOUND_DIR };

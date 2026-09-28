@@ -3,7 +3,8 @@
 A jungle in your terminal. Animals wander in, do something, and wander out
 again. Built for a one-year-old to mash the keyboard at.
 
-Animal keys summon an animal; other keys do nothing. `Ctrl+C` is the only
+Animal keys summon an animal; every other key brings a butterfly, bird,
+flower or rainbow, and never touches the animals. `Ctrl+C` is the only
 way out. No single letter quits, because toddlers find `q`.
 
 ## Install
@@ -27,11 +28,17 @@ Zero dependencies, plain Node ≥ 14. Rendering is raw ANSI escapes.
 | `m` | monkey |
 | `h` | hedgehog |
 | `c` | crocodile |
-| any other key | nothing (a random animal with `--any-key`) |
+| `space` | a rainbow for a few seconds |
+| any other key | a butterfly, bird or flower |
 | `Ctrl+L` | repaint the screen (animals stay) |
 | `Ctrl+C` | quit |
 
-Flags: `--any-key` (every key summons; non-animal keys bring a random one), `--mute`, `--check-sound`.
+Flags: `--any-key` (non-animal keys summon a random animal instead of a
+treat), `--mute` (no clips or spoken names), `--check-sound`.
+
+The path counts treats as scenery, so they never take an animal's seat.
+At most six butterflies and birds fly at once; past that a key grows a
+flower instead. Flowers last a minute, twelve at most.
 
 ## Depth
 
@@ -91,6 +98,12 @@ animals, trimmed to a couple of seconds and levelled so none is much
 louder than the others. The script notes where each clip is cut and why
 (the monkey is the soft build-up of a chimp's call, not the scream).
 
+Treats have no clip, so they say their name instead ("butterfly",
+"rainbow"). The voice is macOS `say`, or `espeak-ng`, `espeak` or
+`spd-say` on Linux; without one, treats are silent. Only one name plays
+at a time. Names pressed while one is talking are skipped, so a held
+key doesn't build up a backlog.
+
 ## Art
 
 Most of the animals are archive ASCII art rather than anything drawn here:
@@ -134,7 +147,8 @@ src/
   scenery.js         canopy, ground, waterholes, trees, bamboo, grass
   animal.js          walk → act → leave state machine
   artkit.js          mirror / shiftRow / spliceRow / unsign
-  sound.js           audio player discovery, cooldown, playback
+  sound.js           audio player discovery, cooldown, playback, speech
+  treats.js          butterflies, birds, flowers, rainbow for other keys
   random.js          animal registry and population cap
   animals/           one module per species (elephant, giraffe, panda,
                      lion, monkey, hedgehog, crocodile)

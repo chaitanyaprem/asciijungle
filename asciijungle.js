@@ -10,6 +10,7 @@ const { Animation } = require('./src/engine');
 const { buildWorld, canAdd, occupants, maxAnimals } = require('./src/world');
 const { addScenery } = require('./src/scenery');
 const { randomAnimal, summonByKey, ANIMALS, BY_KEY } = require('./src/random');
+const { addTreat } = require('./src/treats');
 const sound = require('./src/sound');
 
 const TICK_SPEEDS = [400, 300, 220, 160, 120, 90];
@@ -25,6 +26,7 @@ function parseArgs(argv) {
       const s = sound.status();
       process.stdout.write(
         `player: ${s.player || 'none found (silent)'}\n` +
+        `voice:  ${s.voice || 'none found (names not spoken)'}\n` +
         `sounds: ${s.dir}\n` +
         (s.files.length ? s.files.map((f) => '  ' + f).join('\n') + '\n'
                         : '  (empty — run tools/fetch-sounds.sh)\n')
@@ -33,12 +35,13 @@ function parseArgs(argv) {
     } else if (a === '-h' || a === '--help') {
       process.stdout.write(
         'Usage: asciijungle.js [--any-key] [--mute] [--check-sound]\n\n' +
-        '  --any-key      other keys summon a random animal too\n' +
-        '  --mute         no sound\n' +
+        '  --any-key      other keys summon a random animal instead of a treat\n' +
+        '  --mute         no sound or spoken names\n' +
         '  --check-sound  report the audio player and sound files, then exit\n\n' +
         'Keys:\n' +
         ANIMALS.map((a) => `  ${a.key}   ${a.name}`).join('\n') + '\n' +
-        '  other keys      nothing (a random animal with --any-key)\n\n' +
+        '  space           a rainbow\n' +
+        '  other keys      a butterfly, bird or flower\n\n' +
         'Ctrl+C quits. Ctrl+L redraws. No single letter quits, on purpose.\n'
       );
       process.exit(0);
@@ -113,8 +116,8 @@ function main() {
     // mashing hand finds Ctrl+L.
     if (raw === '\x0c') { anim.redrawScreen(); return; }
     // Arrow and function keys arrive as escape sequences; their letters
-    // ('\x1b[C') must not summon a crocodile.
-    if (raw.startsWith('\x1b')) return;
+    // ('\x1b[C') must not summon a crocodile. The whole sequence is one key.
+    if (raw.startsWith('\x1b')) { if (opts.calm) addTreat(anim, raw); return; }
 
     // force + atEdge: if there is a free seat, the animal is visible in full
     // the instant the key goes down rather than creeping in one column at a
@@ -122,8 +125,9 @@ function main() {
     const summonOpts = { announce: true, force: true, atEdge: true };
     // Fast mashing can deliver several keys in one chunk; take each one.
     for (const k of raw.toLowerCase()) {
-      if (summonByKey(anim, k, summonOpts)) continue;
-      if (!opts.calm && !BY_KEY.has(k)) randomAnimal(anim, summonOpts);
+      if (BY_KEY.has(k)) summonByKey(anim, k, summonOpts);
+      else if (opts.calm) addTreat(anim, k);
+      else randomAnimal(anim, summonOpts);
     }
   });
 
