@@ -86,6 +86,11 @@ and missing players are both fine; the jungle stays quiet.
 `sounds/` is gitignored; see `sounds/README.md` for why and
 `tools/fetch-sounds.sh` for where to get clips.
 
+`tools/fetch-sounds.sh` gets a Wikimedia Commons clip for all seven
+animals, trimmed to a couple of seconds and levelled so none is much
+louder than the others. The script notes where each clip is cut and why
+(the monkey is the soft build-up of a chimp's call, not the scream).
+
 ## Art
 
 Most of the animals are archive ASCII art rather than anything drawn here:

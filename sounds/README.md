@@ -31,6 +31,7 @@ ffmpeg -i ~/Downloads/roar.wav -t 2.5 -ac 1 -ar 22050 sounds/lion.wav
 This directory is gitignored on purpose. The BBC Sound Effects library is free
 under the RemArc licence for **personal and educational use only** and is not
 redistributable, so those clips must not be committed. The Wikimedia Commons
-elephant trumpet that `fetch-sounds.sh` downloads is CC0 and would be safe to
-ship, but the directory is excluded wholesale rather than file-by-file so that
-nothing licensed gets committed by accident.
+clips that `fetch-sounds.sh` downloads are public domain, CC0 or CC BY-SA
+(each is credited in the script) and could be shipped with attribution, but
+the directory is excluded wholesale rather than file-by-file so that nothing
+licensed gets committed by accident.
