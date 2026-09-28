@@ -3,8 +3,8 @@
 A jungle in your terminal. Animals wander in, do something, and wander out
 again. Built for a one-year-old to mash the keyboard at.
 
-Any key summons an animal. `Ctrl+C` is the only way out. No single letter
-quits, because toddlers find `q`.
+Animal keys summon an animal; other keys do nothing. `Ctrl+C` is the only
+way out. No single letter quits, because toddlers find `q`.
 
 ## Install
 
@@ -27,11 +27,11 @@ Zero dependencies, plain Node ≥ 14. Rendering is raw ANSI escapes.
 | `m` | monkey |
 | `h` | hedgehog |
 | `c` | crocodile |
-| any other key | a random animal wanders in |
-| `Ctrl+L` | redraw |
+| any other key | nothing (a random animal with `--any-key`) |
+| `Ctrl+L` | repaint the screen (animals stay) |
 | `Ctrl+C` | quit |
 
-Flags: `--calm` (only the animal keys summon; other keys do nothing), `--mute`, `--check-sound`.
+Flags: `--any-key` (every key summons; non-animal keys bring a random one), `--mute`, `--check-sound`.
 
 ## Depth
 

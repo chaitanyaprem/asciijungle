@@ -9,16 +9,17 @@
 const { Animation } = require('./src/engine');
 const { buildWorld, canAdd, occupants, maxAnimals } = require('./src/world');
 const { addScenery } = require('./src/scenery');
-const { randomAnimal, summonByKey, ANIMALS } = require('./src/random');
+const { randomAnimal, summonByKey, ANIMALS, BY_KEY } = require('./src/random');
 const sound = require('./src/sound');
 
 const TICK_SPEEDS = [400, 300, 220, 160, 120, 90];
 const DEFAULT_SPEED = 2; // 220 ms — a slow amble, which is the point
 
 function parseArgs(argv) {
-  const opts = { calm: false, mute: false, speed: DEFAULT_SPEED };
+  const opts = { calm: true, mute: false, speed: DEFAULT_SPEED };
   for (const a of argv.slice(2)) {
     if (a === '--calm') opts.calm = true;
+    else if (a === '--any-key') opts.calm = false;
     else if (a === '--mute' || a === '-m') opts.mute = true;
     else if (a === '--check-sound') {
       const s = sound.status();
@@ -31,13 +32,13 @@ function parseArgs(argv) {
       process.exit(0);
     } else if (a === '-h' || a === '--help') {
       process.stdout.write(
-        'Usage: asciijungle.js [--calm] [--mute] [--check-sound]\n\n' +
-        '  --calm         only the animal keys summon; other keys do nothing\n' +
+        'Usage: asciijungle.js [--any-key] [--mute] [--check-sound]\n\n' +
+        '  --any-key      other keys summon a random animal too\n' +
         '  --mute         no sound\n' +
         '  --check-sound  report the audio player and sound files, then exit\n\n' +
         'Keys:\n' +
         ANIMALS.map((a) => `  ${a.key}   ${a.name}`).join('\n') + '\n' +
-        '  any other key   a random animal wanders in\n\n' +
+        '  other keys      nothing (a random animal with --any-key)\n\n' +
         'Ctrl+C quits. Ctrl+L redraws. No single letter quits, on purpose.\n'
       );
       process.exit(0);
@@ -108,17 +109,23 @@ function main() {
   process.stdin.on('data', (key) => {
     const raw = key.toString();
     if (raw === '\x03') return quit();      // Ctrl+C — the only exit
-    if (raw === '\x0c') { rebuild = true; return; } // Ctrl+L — redraw
-
-    const k = raw.toLowerCase();
+    // Ctrl+L repaints only. Rebuilding would clear every animal, and a
+    // mashing hand finds Ctrl+L.
+    if (raw === '\x0c') { anim.redrawScreen(); return; }
+    // Arrow and function keys arrive as escape sequences; their letters
+    // ('\x1b[C') must not summon a crocodile.
+    if (raw.startsWith('\x1b')) return;
 
     // force + atEdge: a summon always produces an animal, and that animal is
     // visible in full the instant the key goes down. Silently ignoring the
     // key, or answering it with one column of pixels, is the worst possible
     // response to a toddler pressing it.
     const summonOpts = { announce: true, force: true, atEdge: true };
-    if (summonByKey(anim, k, summonOpts)) return;
-    if (!opts.calm) randomAnimal(anim, summonOpts);
+    // Fast mashing can deliver several keys in one chunk; take each one.
+    for (const k of raw.toLowerCase()) {
+      if (summonByKey(anim, k, summonOpts)) continue;
+      if (!opts.calm && !BY_KEY.has(k)) randomAnimal(anim, summonOpts);
+    }
   });
 
   process.stdout.on('resize', () => { rebuild = true; });
