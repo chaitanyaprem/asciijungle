@@ -53,7 +53,7 @@ thing, then carry on and leave.
 
 - **elephant** → straightens its trunk into the waterhole and drinks
 - **giraffe** → stretches its neck up into the tall tree and browses
-- **panda** → sits back in the bamboo, turns to face you, and eats
+- **panda** → waddles up to the bamboo on two legs, takes a stalk, and eats
 - **lion** → lies down in the shade beside the tall tree
 - **monkey** → swings along vines and trees, then hangs to eat
 - **hedgehog** → trundles to a random spot and curls into a ball for a while
@@ -92,8 +92,11 @@ Most of the animals are archive ASCII art rather than anything drawn here:
 
 - **elephant**: "Elephant" by Rowan Crawford, via the
   [ASCII Art Archive](https://www.asciiart.eu/animals/elephants)
-- **panda**: BluePard, via alt.ascii-art (May 1998); the "BP" mark on
-  the chin stripped
+- **panda**: Braille dot art from
+  [emojicombos.com](https://emojicombos.com/panda-ascii-art) (artist not
+  credited there): the small upright panda waving, and the same panda with
+  a bamboo stalk for eating. The walk (each foot lifting in turn while the
+  body sways) is derived from the standing pose
 - **hedgehog**: by "ejm", via
   [ascii.co.uk/art/hedgehog](https://ascii.co.uk/art/hedgehog)
 - **crocodile**: Shanaka Dias (snd), via

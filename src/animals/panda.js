@@ -1,27 +1,79 @@
 'use strict';
 
 const animal = require('../animal');
-const { shiftRow, lines, widthOf } = require('../artkit');
+const { lines, widthOf } = require('../artkit');
 
-// Panda by BluePard, posted to alt.ascii-art (May 1998). Front-facing
-// so the ears and eye patches read; the same art is used both ways
-// (it waddles toward you). Signature "BP" on the chin stripped.
-const WALK = [
-  "          o88            88o",
-  "         68888.--''''--.88889",
-  "          `88            88'",
-  "          .'              `.",
-  "         /                  \\",
-  "         |                   |",
-  "         |    88       88    |",
-  "         |   88o       o88   |",
-  "        o`.  8    ___    8  .'o",
-  "       8888`.     '^'     .'8888",
-  "     o888888o`. `.-'-.' .'o888888o",
-  "   o888888888oo`-------'oo8888888o",
-].join('\n');
+// Panda from emojicombos.com's panda art (Braille dot art, artist not
+// credited there): the small upright one waving, and the same panda
+// holding a bamboo stalk for eating. Front-facing, so it waddles both
+// ways with the same frames.
+//
+// The walk is derived here, not in the original: B lifts the left foot two
+// dots and sways the body one dot onto the right leg; C is the other side.
+// Cycle A B A C.
+//
+// The original's feet sit in the top dots of its last row, so it floated
+// three dots above the ground. Everything is moved down three dots so the
+// feet are on the bottom edge.
+//
+// Braille has no "empty but solid" character except U+2800, which looks
+// exactly like a space in an editor. '.' marks those cells below: blanks
+// sealing a one-cell gap in the outline, so the engine's border flood fill
+// can't leak into the face and show scenery through it.
+const A = `
+      ⣠⣄⡀
+     ⢸⡿⠟⠋.⠐⠂⢄⡀
+    ⢀⠎⢀⣀⡀  ..⠈⢻⣿⡆
+ ⠠⣿⣷⣼.⠺⠯⠇  ⣠⣤⡀⠈⡟⠁
+  ⢻⣿⣿⣦⣉.⠐⠻⠅⠱⠿⠣⢠⠁
+   ⠙⡿⠿⠿⣿⣶⣤⣤⣤⣥⡔⠁
+   ⢀⠁   ⠈⠉⠛⢿⣿⣷⡀
+   ⠈⡄   ...⠈⣿⣿⡇
+    ⣿⣦⣄⣀⣀⣀⣠⣾⡏⠛⠁
+    ⠹⣿⡿  ⠸⣿⡿
+`;
 
-const WALK_B = shiftRow(WALK, -1, 1);
+const B = `
+      ⢀⣤⣀
+      ⣿⠿⠛⠁.⠒⠠⣀
+     ⡰⠁⣀⣀  ...⠙⣿⣷
+  ⢼⣿⣦⡇⠐⠿⠽  ⢀⣤⣄.⢹⠋
+  ⠘⣿⣿⣷⣌⡁.⠚⠯⠈⠾⠟⠄⡌
+   ⠈⢻⠿⠿⢿⣷⣦⣤⣤⣬⣤⠊
+    ⡈    ⠉⠙⠻⣿⣿⣆
+    ⢡    ...⢹⣿⣿
+    ⢸⣷⣤⣀⣀⣀⣀⣴⣿⠙⠋
+    ⠙⠛⠛  ⠸⣿⡿
+`;
+
+const C = `
+     ⢀⣤⣀
+     ⣿⠿⠛⠁.⠒⠠⣀
+    ⡰⠁⣀⣀  ...⠙⣿⣷
+ ⢼⣿⣦⡇⠐⠿⠽  ⢀⣤⣄.⢹⠋
+ ⠘⣿⣿⣷⣌⡁.⠚⠯⠈⠾⠟⠄⡌
+  ⠈⢻⠿⠿⢿⣷⣦⣤⣤⣬⣤⠊
+   ⡈    ⠉⠙⠻⣿⣿⣆
+   ⢡    ...⢹⣿⣿
+   ⢸⣷⣤⣀⣀⣀⣀⣴⣿⠙⠋
+    ⠹⣿⡿  ⠘⠛⠛
+`;
+
+const EAT = `
+      ⣠⣄⡀
+     ⢸⡿⠟⠋.⠐⠂⢄⡀
+    ⢀⠎⢀⣀⡀  ..⠈⢻⣿⡆
+ ⠠⣿⣷⣼.⠺⠯⠇  ⣠⣤⡀⠈⡟⠁
+  ⢻⣿⣿⣦⣉.⠐⠻⠅⠱⠿⠣⢠⠁
+   ⠙⡿⠿⠿⣿⣶⣤⣤⣤⣥⡔⠁.
+   ⢀⠁   ⠈⠉⠛⢿⣿⣷⡁⡖⢢
+   ⠈⡄   ...⡈⣿⣿⣇⡇⡘
+    ⣿⣦⣄⣀⣀⣀⣠⣾⡏⠛⠁⡇⡆
+    ⠹⣿⡿  ⠸⣿⡿   ⠃⠅
+`;
+
+const solid = (art) => art.replace(/\./g, '⠀');
+const WALK = [A, B, A, C].map(solid);
 
 const spec = {
   type: 'panda',
@@ -29,24 +81,24 @@ const spec = {
   feature: 'bambooX',
   defaultColor: 'W',
   baseSpeed: 0.45,
-  frameSpeed: 0.16,
+  frameSpeed: 0.25,
   actFrameSpeed: 0.06,
   actTicks: 70,
   actChance: 0.85,
-  // Centre of the face, so it sits in the bamboo not inside the tall tree.
+  // Centre of the body, so it sits in the bamboo not inside the tall tree.
   anchorRight: null,
   anchorLeft: null,
   featureOffset: 2,
   art: {
-    walkRight: [WALK, WALK_B],
-    walkLeft: [WALK, WALK_B],
-    actRight: [WALK],
-    actLeft: [WALK],
+    walkRight: WALK,
+    walkLeft: WALK,
+    actRight: [solid(EAT)],
+    actLeft: [solid(EAT)],
   },
 };
 
 {
-  const w = widthOf(lines(WALK));
+  const w = widthOf(lines(A));
   spec.anchorRight = spec.anchorLeft = Math.floor(w / 2);
 }
 
