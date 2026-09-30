@@ -2,8 +2,8 @@
 
 All seven clips come from Wikimedia Commons. `tools/fetch-sounds.sh` builds
 each one from the original: it cuts the part listed below, mixes it to mono
-at 22050 Hz, levels it (`loudnorm`) and adds a short fade in and out. Re-run
-the script to rebuild them.
+at 22050 Hz, levels it (`loudnorm`; the monkey 6 dB under the rest) and
+adds a short fade in and out. Re-run the script to rebuild them.
 
 | File | Original on Wikimedia Commons | Author | Licence | Cut |
 | --- | --- | --- | --- | --- |
