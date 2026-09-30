@@ -9,13 +9,42 @@ way out. No single letter quits, because toddlers find `q`.
 
 ## Install
 
+Zero dependencies: you need [Node.js](https://nodejs.org) 14 or newer and a
+terminal. Rendering is raw ANSI escapes.
+
+### macOS and Linux
+
 ```sh
-git clone <this repo>
+git clone https://github.com/chaitanyaprem/asciijungle.git
 cd asciijungle
 ./asciijungle.js
 ```
 
-Zero dependencies, plain Node ≥ 14. Rendering is raw ANSI escapes.
+For animal sounds, run `tools/fetch-sounds.sh` once (it needs `curl`,
+`ffmpeg` and `bc`); see [Sound](#sound).
+
+### Windows
+
+Use [Windows Terminal](https://aka.ms/terminal) (built into Windows 11).
+The old `cmd` window mangles the colours.
+
+```
+git clone https://github.com/chaitanyaprem/asciijungle.git
+cd asciijungle
+node asciijungle.js
+```
+
+No Git? Use **Code → Download ZIP** on the GitHub page, unzip it, and run
+`node asciijungle.js` in that folder. Start it with `node` on Windows;
+`./asciijungle.js` doesn't work there.
+
+Sound is macOS and Linux only for now; on Windows the jungle is silent.
+
+### If the panda shows as boxes
+
+The panda is drawn with Braille characters. If it comes out as boxes or
+question marks, your terminal font doesn't have them: pick one that does,
+such as DejaVu Sans Mono or Menlo.
 
 ## Keys
 
@@ -179,3 +208,10 @@ fills transparency from the sprite's border inward, so interior gaps stay
 solid. The blanket "every space is transparent" approach the aquarium uses
 would let trees show straight through an elephant's belly. That's fine
 underwater and wrong here.
+
+## License
+
+GPL-2.0-or-later (see `LICENSE`), because the rendering engine comes from
+[asciiquarium-js](https://github.com/craftzdog/asciiquarium-js), which is
+GPL too. The archive ASCII art keeps its artists' credit in [Art](#art).
+Sound clips are not in the repo; `tools/fetch-sounds.sh` credits each one.

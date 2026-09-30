@@ -5,7 +5,7 @@
   "main": "asciijungle.js",
   "bin": { "asciijungle": "./asciijungle.js" },
   "scripts": {
-    "start": "./asciijungle.js",
+    "start": "node asciijungle.js",
     "check": "node -c asciijungle.js && for f in src/*.js src/animals/*.js; do node -c \"$f\" || exit 1; done && echo ok",
     "sounds": "./tools/fetch-sounds.sh"
   },
