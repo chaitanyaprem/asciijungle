@@ -7,6 +7,7 @@
 // only the oldest flower makes way.
 
 const { DEPTH } = require('./depth');
+const { parseFrame, parseMask } = require('./engine');
 const { drift, BIRD_RIGHT, BIRD_LEFT } = require('./scenery');
 const sound = require('./sound');
 
@@ -203,6 +204,82 @@ function addRainbow(anim) {
   return true;
 }
 
+// ────────────────────────────── rain ─────────────────────────────
+// R: drops fall from the top to the ground for RAIN_MS. RAINBOW_AT_MS in,
+// the rainbow comes out behind the rain and stays while it pours, going
+// RAINBOW_MS after the rain stops. One entity whose single frame is redrawn
+// from the drop list every tick.
+const RAIN_MS = 25000;
+const RAINBOW_AT_MS = 12000;
+const DROPS_PER_TICK = 0.06; // new drops per column per tick
+const DROP_FALL = 2;         // rows per tick
+
+function rainFrame(e, anim) {
+  const w = anim.width();
+  const h = anim.world.groundY;
+  const rows = Array.from({ length: h }, () => new Array(w).fill(' '));
+  const cols = Array.from({ length: h }, () => new Array(w).fill(' '));
+  for (const d of e.drops) {
+    rows[d.y][d.x] = d.c;
+    cols[d.y][d.x] = d.color;
+  }
+  e.frames = [parseFrame(rows.map((r) => r.join('')).join('\n'), true)];
+  e.colorMasks = parseMask(cols.map((r) => r.join('')).join('\n'));
+  e.physFrame = 0;
+}
+
+function pour(e, anim) {
+  const w = anim.width();
+  const h = anim.world.groundY;
+  for (const d of e.drops) d.y += DROP_FALL;
+  e.drops = e.drops.filter((d) => d.y < h && d.x < w);
+  const now = Date.now();
+  if (now < e.until) {
+    // addRainbow on one that's up restarts its hold, so calling it every
+    // tick keeps the rainbow out for as long as it rains.
+    if (now - e.start >= RAINBOW_AT_MS) addRainbow(anim);
+    const n = Math.round(w * DROPS_PER_TICK * (0.7 + Math.random() * 0.6));
+    for (let i = 0; i < n; i++) {
+      e.drops.push({
+        x: Math.floor(Math.random() * w),
+        y: Math.floor(Math.random() * DROP_FALL),
+        c: Math.random() < 0.8 ? '|' : '\'',
+        color: Math.random() < 0.7 ? 'C' : 'B',
+      });
+    }
+  } else if (!e.drops.length) {
+    e.alive = false;
+    return;
+  }
+  rainFrame(e, anim);
+}
+
+function addRain(anim) {
+  // Another press keeps it raining longer rather than doubling the drops.
+  const up = treats(anim, 'rain')[0];
+  if (up) {
+    up.until = Date.now() + RAIN_MS;
+    return true;
+  }
+  const e = anim.newEntity({
+    name: 'treat-rain',
+    type: 'scenery',
+    shape: ' ',
+    // In front of the animals, behind the foreground grass.
+    position: [0, 0, DEPTH.skyDecor - 1],
+    callback: pour,
+    autoTrans: true,
+  });
+  e.treat = 'rain';
+  e.drops = [];
+  e.start = Date.now();
+  e.until = e.start + RAIN_MS;
+  return true;
+}
+
+// Shown on screen, not named aloud.
+const QUIET = new Set(['flower', 'rainbow', 'rain']);
+
 const KINDS = [
   { name: 'butterfly', add: addButterfly },
   { name: 'bird', add: addBird },
@@ -211,15 +288,15 @@ const KINDS = [
 
 // key is one character, or a whole escape sequence (arrow keys).
 function addTreat(anim, key) {
-  let kind = key === ' '
-    ? { name: 'rainbow', add: addRainbow }
+  let kind = key === ' ' ? { name: 'rainbow', add: addRainbow }
+    : key === 'r' ? { name: 'rain', add: addRain }
     : pick(KINDS);
   // Sky full of flyers: a flower instead, so the key still does something.
   if (!kind.add(anim)) {
     kind = KINDS[2];
     kind.add(anim);
   }
-  sound.say(kind.name);
+  if (!QUIET.has(kind.name)) sound.say(kind.name);
 }
 
 module.exports = { addTreat, rainbowArt };

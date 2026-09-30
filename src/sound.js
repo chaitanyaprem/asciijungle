@@ -107,7 +107,7 @@ function play(name) {
   } catch {}
 }
 
-// Speech: treats (butterfly, rainbow…) have no clip, so their name is
+// Speech: treats (butterfly, bird) have no clip, so their name is
 // said instead. `say` ships with macOS; the rest are Linux.
 const VOICES = [
   ...(WIN ? [WIN_VOICE] : []),
