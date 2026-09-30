@@ -72,6 +72,7 @@ such as DejaVu Sans Mono or Menlo.
 | the same key again | that animal hops and calls |
 | `space` | a rainbow sweeps across the sky, stays a while, then sweeps away |
 | `r` | rain falls for a while; partway through a rainbow comes out and stays until the rain stops |
+| `←` `→` while it rains | the wind leans the rain that way, a step a press (two at most); the other arrow straightens it |
 | any other key | a butterfly, bird or flower |
 | `Ctrl+L` | repaint the screen (animals stay) |
 | `Ctrl+C` | quit |
