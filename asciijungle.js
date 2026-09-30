@@ -8,6 +8,7 @@
 
 const { Animation } = require('./src/engine');
 const { buildWorld, canAdd, occupants, maxAnimals } = require('./src/world');
+const { resettle } = require('./src/animal');
 const { addScenery } = require('./src/scenery');
 const { randomAnimal, pressAnimal, ANIMALS, BY_KEY } = require('./src/random');
 const { addTreat } = require('./src/treats');
@@ -93,20 +94,26 @@ function main() {
   process.on('uncaughtException', (e) => { restoreTerminal(); console.error(e); process.exit(1); });
 
   const anim = new Animation();
-  let rebuild = true;
+  let rebuild = false;
   let sinceSpawn = 0;
 
-
-  function build() {
+  // keep: a resize. Cmd+Plus/Minus and full-screen toggles are resizes, and
+  // a mashing hand finds them, so the animals stay and only the scenery is
+  // rebuilt around them. Starting over would swap everyone out.
+  function build(keep) {
+    const animals = keep ? occupants(anim) : [];
     anim.updateTermSize();
     anim.removeAllEntities();
     buildWorld(anim);
     addScenery(anim);
-    // A couple already in view so the jungle isn't empty. Leave a free
-    // seat so the first keys add, instead of immediately swapping someone.
-    // Ambient refill only tops up to two.
-    const opening = Math.min(2, maxAnimals(anim));
-    for (let i = 0; i < opening; i++) randomAnimal(anim, { onScreen: true });
+    for (const e of animals) if (resettle(e, anim)) anim.addEntity(e);
+    if (!keep) {
+      // A couple already in view so the jungle isn't empty. Leave a free
+      // seat so the first keys add, instead of immediately swapping someone.
+      // Ambient refill only tops up to two.
+      const opening = Math.min(2, maxAnimals(anim));
+      for (let i = 0; i < opening; i++) randomAnimal(anim, { onScreen: true });
+    }
     anim.redrawScreen();
   }
 
@@ -136,7 +143,7 @@ function main() {
   process.stdout.on('resize', () => { rebuild = true; });
 
   const tick = () => {
-    if (rebuild) { build(); rebuild = false; return; }
+    if (rebuild) { build(true); rebuild = false; return; }
 
     // Quiet refill: keep at least a couple of animals wandering if nobody
     // is mashing keys. Summons fill the rest of the seats.
@@ -148,7 +155,7 @@ function main() {
     anim.animate();
   };
 
-  build();
+  build(false);
   setInterval(tick, TICK_SPEEDS[opts.speed]);
 }
 

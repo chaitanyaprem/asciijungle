@@ -445,8 +445,44 @@ function step(e, anim) {
 
   const w = e.width();
   const offscreen = e.x + w <= 0 || e.x >= anim.width();
+  // Gone only once it's past the side it's walking toward. Off the side it
+  // came from means it was nudged back while stuck behind someone (a summon
+  // lands on top of whoever is at the edge); removing it then made an
+  // animal slide out backwards and vanish. It waits and walks back in.
+  const pastFar = e.facingRight ? e.x >= anim.width() : e.x + w <= 0;
   if (!offscreen) e.entered = true;
-  else if (e.entered) e.alive = false;
+  else if (e.entered && pastFar) e.alive = false;
 }
 
-module.exports = { spawn, react, hurryPeek, WALK, ACT, LEAVE };
+// After a terminal resize the scenery is rebuilt: the ground line, the
+// landmarks and the vines all move. Put e back on its lane and let go of a
+// landmark that is no longer where it was headed.
+function resettle(e, anim) {
+  const world = anim.world;
+  if (e.lane === 'canopy') {
+    // Re-grip the vine nearest where it was hanging.
+    const grip = e.x + (e.spec.anchorRight != null ? e.spec.anchorRight : 2);
+    let best = null;
+    for (const s of world.swings) {
+      if (!best || Math.abs(s.x - grip) < Math.abs(best.x - grip)) best = s;
+    }
+    if (!best) return false;
+    e.groundY = best.y;
+    e.physX = best.x - (e.spec.anchorRight != null ? e.spec.anchorRight : 2);
+    e.x = Math.floor(e.physX);
+    e.state = ACT;
+    e.dx = 0;
+    e.targetX = null;
+    e.leapFromX = e.leapToX = e.leapFromY = e.leapToY = null;
+    e.featureKey = 'swing:' + best.x;
+    e.actLeft = Math.max(e.actLeft, 10);
+    useArt(e, artFor(e.prepared, ACT, e.facingRight));
+    return true;
+  }
+  if (e.state === ACT) e.actLeft = 1; // its landmark moved: finish up and go
+  if (e.state === WALK) { e.targetX = null; e.featureKey = null; }
+  setLane(e, anim, e.lane);
+  return true;
+}
+
+module.exports = { spawn, react, hurryPeek, resettle, WALK, ACT, LEAVE };

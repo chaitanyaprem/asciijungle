@@ -74,7 +74,9 @@ scene would feel like a machine rather than a jungle.
 An animal key summons that animal if it isn't on screen and the path has
 room. If it's already on screen, it hops and calls instead, so a key
 always does something once its animal is out, even on a full path.
-Nobody on screen is ever swapped out for a newcomer. The path holds one
+Nobody on screen is ever swapped out for a newcomer, and resizing the
+terminal (Cmd+Plus/Minus counts) rebuilds only the scenery around the
+animals already there. The path holds one
 animal per 24 columns of terminal, between 2 and 4; monkeys swing
 overhead and have their own limit of 2.
 
