@@ -296,6 +296,16 @@ function hop(e) {
   e.y = Math.floor(e.physY) - Math.round(Math.sin(t * Math.PI) * 2);
 }
 
+// How far e moves this tick. A spec's gait scales the pace frame by frame
+// (the frog stays put while sitting and covers its ground in the air);
+// without one it's a steady walk.
+function stride(e) {
+  const gait = e.spec.gait;
+  if (!gait) return e.dx;
+  const n = gait.length;
+  return e.dx * gait[((Math.floor(e.physFrame) % n) + n) % n];
+}
+
 function stepAndHop(e, anim) {
   step(e, anim);
   hop(e);
@@ -393,7 +403,8 @@ function step(e, anim) {
     if (!blocked) setLane(e, anim, 'path');
   }
 
-  const nextX = Math.floor(e.physX + e.dx);
+  const dx = stride(e);
+  const nextX = Math.floor(e.physX + dx);
   const stuck = blockerAt(anim, e, e.x);
   const hit = stuck || blockerAt(anim, e, nextX);
   if (hit) {
@@ -418,7 +429,7 @@ function step(e, anim) {
     }
   }
 
-  e.physX += e.dx;
+  e.physX += dx;
   e.physFrame += e.frameSpeed;
   e.x = Math.floor(e.physX);
 

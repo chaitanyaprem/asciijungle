@@ -127,6 +127,10 @@ class Entity {
 class Animation {
   constructor() {
     this.entities = [];
+    // The debugging tools in tools/ parse each frame on its own, so they
+    // want every cell written every time and no sync escapes.
+    this.fullFrames = !!process.env.ASCIIJUNGLE_FULL_FRAMES;
+    this.prev = null; // last frame on screen: { ch, co }, for diffing
     this.updateTermSize();
   }
   updateTermSize() {
@@ -199,7 +203,7 @@ class Animation {
     this.render();
   }
 
-  redrawScreen() { process.stdout.write('\x1b[2J'); this.render(); }
+  redrawScreen() { process.stdout.write('\x1b[2J'); this.prev = null; this.render(); }
 
   render() {
     const w = this.w, h = this.h;
@@ -232,18 +236,45 @@ class Animation {
       }
     }
 
-    let out = '\x1b[H';
-    let last = null;
+    if (this.fullFrames) {
+      let out = '\x1b[H';
+      let last = null;
+      for (let row = 0; row < h; row++) {
+        out += `\x1b[${row + 1};1H`;
+        for (let col = 0; col < w; col++) {
+          const c = co[row][col];
+          if (c !== last) { out += ansiColor(c); last = c; }
+          out += ch[row][col];
+        }
+      }
+      out += '\x1b[0m';
+      process.stdout.write(out);
+      return;
+    }
+
+    // Write only the cells that changed since the last frame; most of the
+    // jungle holds still, and repainting every cell every tick is what made
+    // slower terminals flicker. The whole update goes inside a synchronized
+    // output block (mode 2026), so terminals that support it show it all at
+    // once; the rest ignore the escape.
+    const prev = this.prev && this.prev.ch.length === h &&
+      this.prev.ch[0].length === w ? this.prev : null;
+    let out = '';
+    let last;
+    let atRow = -1, atCol = -1;
     for (let row = 0; row < h; row++) {
-      out += `\x1b[${row + 1};1H`;
       for (let col = 0; col < w; col++) {
         const c = co[row][col];
+        if (prev && prev.ch[row][col] === ch[row][col] && prev.co[row][col] === c) continue;
+        if (row !== atRow || col !== atCol) out += `\x1b[${row + 1};${col + 1}H`;
         if (c !== last) { out += ansiColor(c); last = c; }
         out += ch[row][col];
+        atRow = row; atCol = col + 1;
       }
     }
-    out += '\x1b[0m';
-    process.stdout.write(out);
+    this.prev = { ch, co };
+    if (!out) return;
+    process.stdout.write('\x1b[?2026h' + out + '\x1b[0m\x1b[?2026l');
   }
 }
 

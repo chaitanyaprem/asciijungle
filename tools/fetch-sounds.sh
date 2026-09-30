@@ -4,14 +4,14 @@
 # Two sources, in order of preference per animal:
 #
 #   1. Wikimedia Commons — public domain, CC0, CC BY or CC BY-SA, so
-#      redistributable with credit. Covers all seven animals, though giraffe
+#      redistributable with credit. Covers every animal but the (silent) turtle, though giraffe
 #      and crocodile are stand-ins (a grunt; an alligator's bellow). These
 #      are the clips committed in sounds/, credited in sounds/CREDITS.md;
 #      this script rebuilds them.
 #   2. BBC Sound Effects (bbcsfx.acropolis.org.uk) — ~33,000 effects with
 #      excellent animal coverage, free under the RemArc licence for PERSONAL
 #      AND EDUCATIONAL USE ONLY. Not redistributable, so .gitignore keeps
-#      anything but the seven Commons clips out of git. Fine for a toy on
+#      anything but the Commons clips out of git. Fine for a toy on
 #      your own machine; do not ship it.
 #
 # Files are converted to .wav because that's what afplay handles natively,
@@ -75,6 +75,10 @@ fetch "https://upload.wikimedia.org/wikipedia/commons/3/3d/Hedgehog_O.ogg" hedge
 # Public domain (Borisblue, "Alligatorbellowedit"). No crocodile recording on
 # Commons is more than a hatchling chirp; an alligator bellow reads right.
 fetch "https://upload.wikimedia.org/wikipedia/commons/d/db/Alligatorbellowedit.ogg" crocodile 2.5 13.6
+# CC BY-SA 4.0 (MichaeltheFox8621, "Single Frog Croak"). Four short croaks a
+# second apart; 1.2 s in keeps two of them. The turtle has no clip: turtles
+# are quiet.
+fetch "https://upload.wikimedia.org/wikipedia/commons/9/9f/Single_Frog_Croak.oga" frog 2.0 1.2
 
 echo
 echo "== BBC Sound Effects (RemArc licence — personal/educational use only) =="
@@ -84,7 +88,7 @@ echo "then drop the files in sounds/ named after the animal, e.g.:"
 echo
 echo "    sounds/elephant.wav   sounds/giraffe.wav   sounds/panda.wav"
 echo "    sounds/lion.wav       sounds/monkey.wav    sounds/hedgehog.wav"
-echo "    sounds/crocodile.wav"
+echo "    sounds/crocodile.wav  sounds/frog.wav"
 echo
 echo "Any of .wav .m4a .mp3 .aiff .ogg works. Re-run with a local file to"
 echo "trim it to length:"

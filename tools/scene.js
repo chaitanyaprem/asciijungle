@@ -1,6 +1,7 @@
 'use strict';
 // Render one 80x24 frame of the actual scene off-terminal and save it to
-// scene.out (ANSI) so the real output can be inspected.
+// tools/out/sceneN.out (ANSI) so the real output can be inspected.
+process.env.ASCIIJUNGLE_FULL_FRAMES = '1';
 Object.defineProperty(process.stdout, 'columns', { value: 80, configurable: true });
 Object.defineProperty(process.stdout, 'rows', { value: 24, configurable: true });
 
@@ -28,7 +29,9 @@ function capture(anim, tag) {
   // The renderer emits one big string ending in \x1b[0m; grab it.
   const out = frames[frames.length - 1] || '';
   frames = [];
-  require('fs').writeFileSync(tag, out);
+  const dir = require('path').join(__dirname, 'out');
+  require('fs').mkdirSync(dir, { recursive: true });
+  require('fs').writeFileSync(require('path').join(dir, tag), out);
   return out;
 }
 

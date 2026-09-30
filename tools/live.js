@@ -11,15 +11,19 @@ const rows = parseInt(process.argv[3], 10) || 24;
 const outBase = process.argv[4] || 'live';
 const secs = parseInt(process.argv[5], 10) || 30;
 const ROOT = path.join(__dirname, '..');
+const OUT = path.join(__dirname, 'out');
 
-// Preload that pins stdout size (piped stdout has no real size).
+// Preload that pins stdout size (piped stdout has no real size) and runs
+// the game muted: a capture run is for looking at, not listening to.
 const preload =
   `Object.defineProperty(process.stdout,'columns',{value:${cols},configurable:true});` +
   `Object.defineProperty(process.stdout,'rows',{value:${rows},configurable:true});` +
+  `process.argv=[process.argv[0],'asciijungle.js','--mute'];` +
   `require('${path.join(ROOT, 'asciijungle.js')}');`;
 
 const child = spawn('node', ['-e', preload], {
   cwd: ROOT,
+  env: { ...process.env, ASCIIJUNGLE_FULL_FRAMES: '1' },
   stdio: ['pipe', 'pipe', 'pipe'],
 });
 
@@ -39,7 +43,8 @@ setTimeout(() => {
   clearInterval(keyTimer);
   try { child.stdin.write('\x03'); } catch {}
   setTimeout(() => {
-    const raw = path.join(ROOT, outBase + '.raw');
+    fs.mkdirSync(OUT, { recursive: true });
+    const raw = path.join(OUT, outBase + '.raw');
     fs.writeFileSync(raw, buf);
     // Split into frames on the home escape. Each frame: \x1b[H ... \x1b[0m
     const parts = buf.split('\x1b[H').slice(1);
@@ -47,10 +52,10 @@ setTimeout(() => {
     for (const p of parts) {
       const frame = '\x1b[H' + p;
       if (frame.length < 100) continue;
-      fs.writeFileSync(path.join(ROOT, `${outBase}_${String(n).padStart(3, '0')}.out`), frame);
+      fs.writeFileSync(path.join(OUT, `${outBase}_${String(n).padStart(3, '0')}.out`), frame);
       n++;
     }
-    console.log(`${cols}x${rows}: ${buf.length} bytes, ${n} frames -> ${outBase}_*.out`);
+    console.log(`${cols}x${rows}: ${buf.length} bytes, ${n} frames -> tools/out/${outBase}_*.out`);
     try { child.kill('SIGKILL'); } catch {}
     process.exit(0);
   }, 500);

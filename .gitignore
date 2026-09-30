@@ -1,6 +1,6 @@
 node_modules/
 
-# Only the seven Wikimedia Commons clips are shipped (credited in
+# Only the Wikimedia Commons clips are shipped (credited in
 # sounds/CREDITS.md). Anything else dropped into sounds/ stays out of git by
 # default: BBC Sound Effects clips are personal and educational use only and
 # must not be redistributed.
@@ -14,3 +14,7 @@ sounds/*
 !sounds/monkey.wav
 !sounds/hedgehog.wav
 !sounds/crocodile.wav
+!sounds/frog.wav
+
+# Captures from the debugging tools (tools/scene.js, live.js, html.js).
+tools/out/
