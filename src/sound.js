@@ -5,26 +5,51 @@ const fs = require('fs');
 const path = require('path');
 
 const SOUND_DIR = path.join(__dirname, '..', 'sounds');
+const WIN = process.platform === 'win32';
+
+// Windows ships no command-line player, but it always ships PowerShell,
+// which can play a .wav through .NET's SoundPlayer and speak through
+// System.Speech. Text goes in as a single-quoted PowerShell string, where a
+// quote is escaped by doubling it. PowerShell takes a moment to start, so a
+// sound can lag the key by about half a second.
+const psQuote = (s) => `'${String(s).replace(/'/g, "''")}'`;
+const PS = ['-NoProfile', '-NonInteractive', '-Command'];
+const WIN_PLAYER = {
+  cmd: 'powershell',
+  args: (f) => [...PS, `(New-Object Media.SoundPlayer ${psQuote(f)}).PlaySync()`],
+};
+const WIN_VOICE = {
+  cmd: 'powershell',
+  args: (t) => [...PS, 'Add-Type -AssemblyName System.Speech; ' +
+    '$v = New-Object System.Speech.Synthesis.SpeechSynthesizer; ' +
+    `$v.Rate = -2; $v.Speak(${psQuote(t)})`],
+};
 
 // Players in preference order. afplay ships with macOS; the others are for
 // Linux boxes. Whichever exists first wins, and if none do we simply go quiet
 // rather than breaking the animation.
 const PLAYERS = [
+  ...(WIN ? [WIN_PLAYER] : []),
   { cmd: 'afplay', args: (f) => [f] },
   { cmd: 'ffplay', args: (f) => ['-nodisp', '-autoexit', '-loglevel', 'quiet', f] },
   { cmd: 'paplay', args: (f) => [f] },
   { cmd: 'aplay', args: (f) => ['-q', f] },
 ];
 
+// On Windows a program is powershell.exe, not powershell: try each
+// executable extension Windows knows (PATHEXT).
 function which(cmd) {
   const dirs = (process.env.PATH || '').split(path.delimiter);
+  const exts = WIN ? (process.env.PATHEXT || '.EXE').split(';').filter(Boolean) : [''];
   for (const d of dirs) {
     if (!d) continue;
-    const p = path.join(d, cmd);
-    try {
-      fs.accessSync(p, fs.constants.X_OK);
-      return p;
-    } catch {}
+    for (const ext of exts) {
+      const p = path.join(d, cmd + ext);
+      try {
+        fs.accessSync(p, fs.constants.X_OK);
+        return p;
+      } catch {}
+    }
   }
   return null;
 }
@@ -74,7 +99,7 @@ function play(name) {
 
   lastPlayed.set(name, now);
   try {
-    const child = spawn(p.cmd, p.args(file), { stdio: 'ignore', detached: false });
+    const child = spawn(p.cmd, p.args(file), { stdio: 'ignore', detached: false, windowsHide: true });
     running.add(child);
     const done = () => running.delete(child);
     child.on('exit', done);
@@ -85,6 +110,7 @@ function play(name) {
 // Speech: treats (butterfly, rainbow…) have no clip, so their name is
 // said instead. `say` ships with macOS; the rest are Linux.
 const VOICES = [
+  ...(WIN ? [WIN_VOICE] : []),
   { cmd: 'say', args: (t) => ['-r', '150', t] },
   { cmd: 'espeak-ng', args: (t) => ['-s', '130', t] },
   { cmd: 'espeak', args: (t) => ['-s', '130', t] },
@@ -107,7 +133,7 @@ function say(text) {
   const v = resolveVoice();
   if (!v) return;
   try {
-    const child = spawn(v.cmd, v.args(text), { stdio: 'ignore', detached: false });
+    const child = spawn(v.cmd, v.args(text), { stdio: 'ignore', detached: false, windowsHide: true });
     speaking = child;
     const done = () => { if (speaking === child) speaking = null; };
     child.on('exit', done);

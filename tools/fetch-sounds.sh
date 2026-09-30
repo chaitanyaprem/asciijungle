@@ -3,15 +3,19 @@
 #
 # Two sources, in order of preference per animal:
 #
-#   1. Wikimedia Commons — genuinely CC0/public domain, redistributable.
-#      Covers all seven animals, though giraffe and crocodile are stand-ins
-#      (a grunt; an alligator's bellow).
+#   1. Wikimedia Commons — public domain, CC0, CC BY or CC BY-SA, so
+#      redistributable with credit. Covers all seven animals, though giraffe
+#      and crocodile are stand-ins (a grunt; an alligator's bellow). These
+#      are the clips committed in sounds/, credited in sounds/CREDITS.md;
+#      this script rebuilds them.
 #   2. BBC Sound Effects (bbcsfx.acropolis.org.uk) — ~33,000 effects with
 #      excellent animal coverage, free under the RemArc licence for PERSONAL
-#      AND EDUCATIONAL USE ONLY. Not redistributable, which is why sounds/ is
-#      gitignored. Fine for a toy on your own machine; do not ship it.
+#      AND EDUCATIONAL USE ONLY. Not redistributable, so .gitignore keeps
+#      anything but the seven Commons clips out of git. Fine for a toy on
+#      your own machine; do not ship it.
 #
-# Files are converted to .wav because that's what afplay handles natively.
+# Files are converted to .wav because that's what afplay handles natively,
+# and Windows (PowerShell's SoundPlayer) plays .wav only.
 # Missing files are not an error — the jungle just stays quiet for that animal.
 
 set -uo pipefail

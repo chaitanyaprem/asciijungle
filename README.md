@@ -24,9 +24,6 @@ cd asciijungle
 ./asciijungle.js
 ```
 
-For animal sounds, run `tools/fetch-sounds.sh` once (it needs `curl`,
-`ffmpeg` and `bc`); see [Sound](#sound).
-
 ### Windows
 
 Use [Windows Terminal](https://aka.ms/terminal) (built into Windows 11).
@@ -42,7 +39,7 @@ No Git? Use **Code → Download ZIP** on the GitHub page, unzip it, and run
 `node asciijungle.js` in that folder. Start it with `node` on Windows;
 `./asciijungle.js` doesn't work there.
 
-Sound is macOS and Linux only for now; on Windows the jungle is silent.
+Sound works on Windows too, through PowerShell, which every Windows PC has.
 
 ### If the panda shows as boxes
 
@@ -127,21 +124,25 @@ mid-screen. Only ambient arrivals walk in from off-screen, which takes
 
 ## Sound
 
-Put clips in `sounds/` named after the animal (`elephant.wav` and friends) and
-they play when that animal is summoned or starts its behaviour. Missing files
-and missing players are both fine; the jungle stays quiet.
+Each animal has a clip in `sounds/` (`elephant.wav` and friends) that plays
+when it's summoned or starts its behaviour. All seven come from Wikimedia
+Commons under free licences, credited in `sounds/CREDITS.md`, so a clone has
+sound straight away. Missing files and missing players are both fine; the
+jungle stays quiet.
 
-`sounds/` is gitignored; see `sounds/README.md` for why and
-`tools/fetch-sounds.sh` for where to get clips.
+Playback is `afplay` on macOS, PowerShell on Windows, and `ffplay`,
+`paplay` or `aplay` on Linux. `node asciijungle.js --check-sound` shows
+what the game found.
 
-`tools/fetch-sounds.sh` gets a Wikimedia Commons clip for all seven
-animals, trimmed to a couple of seconds and levelled so none is much
-louder than the others. The script notes where each clip is cut and why
-(the monkey is the soft build-up of a chimp's call, not the scream).
+`tools/fetch-sounds.sh` rebuilds the clips from the Commons originals:
+trimmed to a couple of seconds and levelled so none is much louder than the
+others. The script notes where each clip is cut and why (the monkey is the
+soft build-up of a chimp's call, not the scream).
 
 Treats have no clip, so they say their name instead ("butterfly",
-"rainbow"). The voice is macOS `say`, or `espeak-ng`, `espeak` or
-`spd-say` on Linux; without one, treats are silent. Only one name plays
+"rainbow"). The voice is macOS `say`, Windows' built-in speech through
+PowerShell, or `espeak-ng`, `espeak` or `spd-say` on Linux; without one,
+treats are silent. Only one name plays
 at a time. Names pressed while one is talking are skipped, so a held
 key doesn't build up a backlog.
 
@@ -218,4 +219,4 @@ underwater and wrong here.
 GPL-2.0-or-later (see `LICENSE`), because the rendering engine comes from
 [asciiquarium-js](https://github.com/craftzdog/asciiquarium-js), which is
 GPL too. The archive ASCII art keeps its artists' credit in [Art](#art).
-Sound clips are not in the repo; `tools/fetch-sounds.sh` credits each one.
+The sound clips keep their own licences, listed in `sounds/CREDITS.md`.

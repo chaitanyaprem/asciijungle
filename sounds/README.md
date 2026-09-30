@@ -1,17 +1,14 @@
 # sounds/
 
-Drop audio files here, named after the animal:
+One clip per animal, named after it (`elephant.wav`, `giraffe.wav`, and so
+on). The seven shipped here come from Wikimedia Commons; see `CREDITS.md`.
 
-```
-elephant.wav
-giraffe.wav
-panda.wav
-```
-
-`.wav`, `.m4a`, `.mp3`, `.aiff` and `.ogg` all work. On macOS playback goes
-through `afplay`; on Linux it falls back to `ffplay`, `paplay` or `aplay`,
-whichever it finds first. If none of them exist, or a file is missing, that
-animal is silent and nothing breaks.
+To use your own, drop a file in with the animal's name. `.wav`, `.m4a`,
+`.mp3`, `.aiff` and `.ogg` all work on macOS and Linux; Windows plays
+`.wav` only. On macOS playback goes through `afplay`, on Windows through
+PowerShell, and on Linux through `ffplay`, `paplay` or `aplay`, whichever
+it finds first. If none of them exist, or a file is missing, that animal
+is silent and nothing breaks.
 
 Check what the game can actually see:
 
@@ -28,10 +25,11 @@ ffmpeg -i ~/Downloads/roar.wav -t 2.5 -ac 1 -ar 22050 sounds/lion.wav
 
 ## Licensing
 
-This directory is gitignored on purpose. The BBC Sound Effects library is free
-under the RemArc licence for **personal and educational use only** and is not
-redistributable, so those clips must not be committed. The Wikimedia Commons
-clips that `fetch-sounds.sh` downloads are public domain, CC0 or CC BY-SA
-(each is credited in the script) and could be shipped with attribution, but
-the directory is excluded wholesale rather than file-by-file so that nothing
-licensed gets committed by accident.
+Only the seven Wikimedia Commons clips are committed, each named in
+`.gitignore`; any other file you add here stays out of git. That matters for
+the BBC Sound Effects library: it is free under the RemArc licence for
+**personal and educational use only** and is not redistributable, so those
+clips must never be committed. Replacing one of the seven files with a BBC
+clip would still be committed, so don't. The Commons clips are public
+domain, CC0, CC BY or CC BY-SA; `CREDITS.md` gives the attribution the
+last two need.
