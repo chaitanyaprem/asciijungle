@@ -7,6 +7,8 @@ const { addLion } = require('./animals/lion');
 const { addMonkey } = require('./animals/monkey');
 const { addHedgehog } = require('./animals/hedgehog');
 const { addCrocodile } = require('./animals/crocodile');
+const { addFrog } = require('./animals/frog');
+const { addTurtle } = require('./animals/turtle');
 const { react, hurryPeek } = require('./animal');
 
 // Registry of everything that can wander in. Adding an animal means adding one
@@ -19,6 +21,8 @@ const ANIMALS = [
   { key: 'm', name: 'monkey', add: addMonkey },
   { key: 'h', name: 'hedgehog', add: addHedgehog },
   { key: 'c', name: 'crocodile', add: addCrocodile },
+  { key: 'f', name: 'frog', add: addFrog },
+  { key: 't', name: 'turtle', add: addTurtle },
 ];
 
 const BY_KEY = new Map(ANIMALS.map((a) => [a.key, a]));

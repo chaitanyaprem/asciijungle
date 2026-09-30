@@ -107,6 +107,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8">
 ${scenes.map(sceneHtml).join('\n')}
 </body></html>`;
 
-const out = path.join(__dirname, '..', 'scenes.html');
+const out = path.join(__dirname, 'out', 'scenes.html');
+fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, html);
 console.log('wrote', out);

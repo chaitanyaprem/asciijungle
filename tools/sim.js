@@ -20,9 +20,9 @@ function sim(cols, rows, ticks) {
   anim.render = () => {}; // no ANSI to stdout during the sim
 
   // A busy, collision-prone mix, summoned from both edges.
-  const order = ['elephant', 'crocodile', 'giraffe', 'lion', 'panda',
+  const order = ['turtle', 'elephant', 'frog', 'crocodile', 'giraffe', 'lion', 'panda',
                  'monkey', 'hedgehog', 'elephant', 'giraffe', 'panda',
-                 'lion', 'crocodile'];
+                 'lion', 'crocodile', 'frog', 'turtle'];
   let spawned = 0;
   for (const name of order) {
     const a = ANIMALS.find((x) => x.name === name);

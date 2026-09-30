@@ -67,6 +67,8 @@ such as DejaVu Sans Mono or Menlo.
 | `m` | monkey |
 | `h` | hedgehog |
 | `c` | crocodile |
+| `f` | frog |
+| `t` | turtle |
 | the same key again | that animal hops and calls |
 | `space` | a rainbow sweeps across the sky, stays a while, then sweeps away |
 | `r` | rain falls for a while; partway through a rainbow comes out and stays until the rain stops |
@@ -79,7 +81,8 @@ treat), `--mute` (no clips or spoken names), `--check-sound`.
 
 The path counts treats as scenery, so they never take an animal's seat.
 At most six butterflies and birds fly at once; past that a key grows a
-flower instead. Flowers last a minute, twelve at most.
+flower instead. Flowers grow from a seed over a couple of seconds, last a
+minute, shrink back down, and there are twelve at most.
 
 ## Depth
 
@@ -106,6 +109,9 @@ thing, then carry on and leave.
 - **monkey** → swings along vines and trees, then hangs to eat
 - **hedgehog** → trundles to a random spot and curls into a ball for a while
 - **crocodile** → slides into the waterhole and lurks, eyes above the surface
+- **frog** → hops along, stops anywhere, and puffs its throat out slowly
+- **turtle** → plods along slower than anyone, pulls into its shell, and now
+  and then pokes its head out to look around
 
 Roughly one animal in five walks straight past without stopping. That variety
 matters more than it sounds. If every elephant stopped at every waterhole the
@@ -135,8 +141,9 @@ mid-screen. Only ambient arrivals walk in from off-screen, which takes
 ## Sound
 
 Each animal has a clip in `sounds/` (`elephant.wav` and friends) that plays
-when it's summoned or starts its behaviour. All seven come from Wikimedia
-Commons under free licences, credited in `sounds/CREDITS.md`, so a clone has
+when it's summoned or starts its behaviour, except the turtle: turtles are
+quiet. All eight clips come from Wikimedia Commons under free licences,
+credited in `sounds/CREDITS.md`, so a clone has
 sound straight away. Missing files and missing players are both fine; the
 jungle stays quiet.
 
@@ -175,7 +182,7 @@ Most of the animals are archive ASCII art rather than anything drawn here:
   pose is the full body, vertical tail-curl under the feet omitted so the
   legs stay on the ground; original faces left, so that is the left-walk
   and the right-walk is mirrored
-- **giraffe**, **lion**, **monkey**, birds, scenery:
+- **giraffe**, **lion**, **monkey**, **frog**, **turtle**, birds, scenery:
   drawn for this project
 
 Artists' signatures have been removed from the sprites; credit belongs here,
@@ -204,7 +211,9 @@ src/
   treats.js          butterflies, birds, flowers, rain, rainbow for other keys
   random.js          animal registry and population cap
   animals/           one module per species (elephant, giraffe, panda,
-                     lion, monkey, hedgehog, crocodile)
+                     lion, monkey, hedgehog, crocodile, frog, turtle)
+tools/               headless debugging: sim, frame capture and rendering;
+                     captures go to tools/out/, which git ignores
 ```
 
 `engine.js`, `colors.js` and the terminal bootstrap are lifted from

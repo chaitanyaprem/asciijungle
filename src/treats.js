@@ -86,6 +86,36 @@ function addBird(anim) {
 // ───────────────────────────── flower ────────────────────────────
 const HEADS = ['(@)', '{*}', '<o>', '\\@/'];
 
+// A flower grows rather than pops: seed, shoot, bud, bloom, one stage every
+// GROW_STEP_MS. As its minute runs out it goes back down the same way, so it
+// leaves as gently as it came.
+const GROW_STEP_MS = 700;
+
+function flowerFrames(head, color) {
+  return {
+    shape: [
+      '   \n . ',
+      ' , \n | ',
+      ' o \n | ',
+      `${head}\n | `,
+    ],
+    color: [
+      '   \n g ',
+      ' G \n g ',
+      ` ${color} \n g `,
+      `${color.repeat(3)}\n g `,
+    ],
+  };
+}
+
+function grow(e) {
+  const now = Date.now();
+  const last = e.frames.length - 1;
+  const up = Math.floor((now - e.born) / GROW_STEP_MS);
+  const down = Math.ceil((e.dieTime - now) / GROW_STEP_MS);
+  e.physFrame = Math.max(0, Math.min(last, up, down));
+}
+
 function addFlower(anim) {
   const now = treats(anim, 'flower');
   if (now.length >= MAX_FLOWERS) now[0].alive = false;
@@ -99,20 +129,23 @@ function addFlower(anim) {
     const inWater = Math.abs(x - water) < Math.floor(w * 0.07) + 3;
     if (!inWater && taken.every((t) => Math.abs(t - x) > 4)) break;
   }
-  const head = pick(HEADS);
   const color = pick(BRIGHT);
+  const art = flowerFrames(pick(HEADS), color);
+  const born = Date.now();
   const e = anim.newEntity({
     name: 'treat-flower',
     type: 'scenery',
-    shape: `${head}\n | `,
-    color: `${color.repeat(3)}\n g `,
+    shape: art.shape,
+    color: art.color,
     // Behind the animals, in front of the trees.
     position: [x, anim.world.groundY - 2, anim.world.z.scenery - 2],
-    dieTime: Date.now() + FLOWER_MS,
+    callback: grow,
+    dieTime: born + FLOWER_MS,
     defaultColor: color,
     autoTrans: true,
   });
   e.treat = 'flower';
+  e.born = born;
   return true;
 }
 
@@ -211,8 +244,11 @@ function addRainbow(anim) {
 // from the drop list every tick.
 const RAIN_MS = 25000;
 const RAINBOW_AT_MS = 12000;
-const DROPS_PER_TICK = 0.06; // new drops per column per tick
-const DROP_FALL = 2;         // rows per tick
+// One row per tick (about 4.5 rows a second) is a gentle fall; two read as
+// a downpour streaking past. Half the drops per tick keeps the same number
+// on screen, since each one now lives twice as long.
+const DROPS_PER_TICK = 0.03; // new drops per column per tick
+const DROP_FALL = 1;         // rows per tick
 
 function rainFrame(e, anim) {
   const w = anim.width();
