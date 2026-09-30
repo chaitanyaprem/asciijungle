@@ -31,6 +31,10 @@ const PEEK_STEPS = [[6, 0.3], [5, 0], [7, 0.5]];
 // A reaction to a repeat keypress: a two-row hop over HOP_TICKS.
 const HOP_TICKS = 6;
 
+// At the last vine in its direction, a monkey leaps off screen this often
+// instead of turning back.
+const CANOPY_LEAVE_CHANCE = 0.5;
+
 function prepare(spec) {
   const p = {};
   for (const key of ['walkRight', 'walkLeft', 'actRight', 'actLeft']) {
@@ -311,24 +315,29 @@ function step(e, anim) {
           ? (spec.anchorRight != null ? spec.anchorRight : 2)
           : (spec.anchorLeft != null ? spec.anchorLeft : 2));
         let nxt = nextSwing(anim, grip, e.facingRight);
-        if (nxt == null) {
+        // Last vine this way: sometimes swing back, sometimes leap off the
+        // edge and leave, so a monkey doesn't hold its canopy seat forever.
+        if (nxt == null && Math.random() >= CANOPY_LEAVE_CHANCE) {
           e.facingRight = !e.facingRight;
           nxt = nextSwing(anim, grip, e.facingRight);
         }
-        if (nxt == null) { e.alive = false; return; }
         const anchor = e.facingRight
           ? (spec.anchorRight != null ? spec.anchorRight : 2)
           : (spec.anchorLeft != null ? spec.anchorLeft : 2);
         const leap = spec.leapSpeed || spec.baseSpeed || 0.8;
         e.state = WALK;
-        e.targetX = nxt.x - anchor;
+        // Leaping off: aim past the edge so the off-screen check below
+        // removes it before it ever "lands".
+        const w = e.width();
+        e.targetX = nxt ? nxt.x - anchor
+          : (e.facingRight ? anim.width() + w : -2 * w);
         e.leapFromX = e.physX;
         e.leapToX = e.targetX;
         e.leapFromY = e.groundY;
-        e.leapToY = nxt.y;
+        e.leapToY = nxt ? nxt.y : e.groundY;
         e.dx = e.facingRight ? leap : -leap;
         e.baseDx = e.dx;
-        e.featureKey = 'swing:' + nxt.x;
+        e.featureKey = nxt ? 'swing:' + nxt.x : null;
         useArt(e, artFor(e.prepared, WALK, e.facingRight));
         return;
       }
