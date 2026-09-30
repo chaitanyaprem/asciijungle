@@ -44,6 +44,7 @@ function parseArgs(argv) {
         '  same key again  it hops and calls\n' +
         '  space           a rainbow\n' +
         '  r               rain, with a rainbow partway through\n' +
+        '  left/right      while it rains, the wind leans it that way\n' +
         '  other keys      a butterfly, bird or flower\n\n' +
         'Ctrl+C quits. Ctrl+L redraws. No single letter quits, on purpose.\n'
       );

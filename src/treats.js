@@ -250,14 +250,28 @@ const RAINBOW_AT_MS = 12000;
 const DROPS_PER_TICK = 0.03; // new drops per column per tick
 const DROP_FALL = 1;         // rows per tick
 
+// Wind: while it rains, each left or right arrow tilts the rain a step that
+// way, up to WIND_STEPS; the other arrow straightens it again. A step is
+// WIND_STEP columns sideways per row fallen. The wind eases toward where the
+// arrows put it by WIND_EASE a tick, so the rain leans over in about a
+// second instead of snapping.
+const WIND_STEP = 0.5;
+const WIND_STEPS = 2;
+const WIND_EASE = 0.1;
+const ARROW = /\x1b[[O]([CD])/g; // right, left; normal or application mode
+
 function rainFrame(e, anim) {
   const w = anim.width();
   const h = anim.world.groundY;
   const rows = Array.from({ length: h }, () => new Array(w).fill(' '));
   const cols = Array.from({ length: h }, () => new Array(w).fill(' '));
+  // Drawn along the way it falls: down and to the right is '\'.
+  const slant = e.wind >= 0.25 ? '\\' : e.wind <= -0.25 ? '/' : null;
   for (const d of e.drops) {
-    rows[d.y][d.x] = d.c;
-    cols[d.y][d.x] = d.color;
+    const x = Math.round(d.x);
+    if (x < 0 || x >= w) continue;
+    rows[d.y][x] = slant || d.c;
+    cols[d.y][x] = d.color;
   }
   e.frames = [parseFrame(rows.map((r) => r.join('')).join('\n'), true)];
   e.colorMasks = parseMask(cols.map((r) => r.join('')).join('\n'));
@@ -267,17 +281,25 @@ function rainFrame(e, anim) {
 function pour(e, anim) {
   const w = anim.width();
   const h = anim.world.groundY;
-  for (const d of e.drops) d.y += DROP_FALL;
-  e.drops = e.drops.filter((d) => d.y < h && d.x < w);
+  const to = e.windSteps * WIND_STEP;
+  e.wind += Math.max(-WIND_EASE, Math.min(WIND_EASE, to - e.wind));
+  for (const d of e.drops) { d.y += DROP_FALL; d.x += e.wind * DROP_FALL; }
+  // A slanted drop can start off screen upwind and drift in, so drops are
+  // kept (and started) over the whole stretch that can still reach the
+  // screen before the ground.
+  const reach = h * Math.abs(e.wind);
+  const lo = e.wind > 0 ? -reach : 0;
+  const hi = e.wind < 0 ? w + reach : w;
+  e.drops = e.drops.filter((d) => d.y < h && d.x > -reach - 1 && d.x < w + reach + 1);
   const now = Date.now();
   if (now < e.until) {
     // addRainbow on one that's up restarts its hold, so calling it every
     // tick keeps the rainbow out for as long as it rains.
     if (now - e.start >= RAINBOW_AT_MS) addRainbow(anim);
-    const n = Math.round(w * DROPS_PER_TICK * (0.7 + Math.random() * 0.6));
+    const n = Math.round((hi - lo) * DROPS_PER_TICK * (0.7 + Math.random() * 0.6));
     for (let i = 0; i < n; i++) {
       e.drops.push({
-        x: Math.floor(Math.random() * w),
+        x: lo + Math.random() * (hi - lo),
         y: Math.floor(Math.random() * DROP_FALL),
         c: Math.random() < 0.8 ? '|' : '\'',
         color: Math.random() < 0.7 ? 'C' : 'B',
@@ -308,6 +330,8 @@ function addRain(anim) {
   });
   e.treat = 'rain';
   e.drops = [];
+  e.wind = 0;      // columns sideways per row, right is positive
+  e.windSteps = 0; // where the arrows have set it, -WIND_STEPS..WIND_STEPS
   e.start = Date.now();
   e.until = e.start + RAIN_MS;
   return true;
@@ -322,8 +346,23 @@ const KINDS = [
   { name: 'flower', add: addFlower },
 ];
 
+// Left and right arrows steer the rain while it's up. Returns false if
+// there is no rain or key holds no left or right arrow.
+function blow(anim, key) {
+  const rain = treats(anim, 'rain')[0];
+  if (!rain) return false;
+  const arrows = [...key.matchAll(ARROW)];
+  if (!arrows.length) return false;
+  for (const [, dir] of arrows) {
+    const step = dir === 'C' ? 1 : -1;
+    rain.windSteps = Math.max(-WIND_STEPS, Math.min(WIND_STEPS, rain.windSteps + step));
+  }
+  return true;
+}
+
 // key is one character, or a whole escape sequence (arrow keys).
 function addTreat(anim, key) {
+  if (blow(anim, key)) return;
   let kind = key === ' ' ? { name: 'rainbow', add: addRainbow }
     : key === 'r' ? { name: 'rain', add: addRain }
     : pick(KINDS);
