@@ -35,18 +35,19 @@ UA="asciijungle/0.1 (personal use)"
 # Trim to a couple of seconds and normalise: a 30-second lion roar is not what
 # you want when a toddler is pressing keys twice a second. <start> skips to
 # the part of a long recording worth hearing. loudnorm keeps every animal at
-# the same volume; without it clips differed by 18 dB.
-convert() { # convert <infile> <outname> <seconds> [start]
+# the same volume; without it clips differed by 18 dB. [loudness] overrides
+# the -16 LUFS target for a clip that sounds too loud even when levelled.
+convert() { # convert <infile> <outname> <seconds> [start] [loudness]
   ffmpeg -y -loglevel error -ss "${4:-0}" -t "${3:-2.5}" -i "$1" -ac 1 -ar 22050 \
-    -af "loudnorm=I=-16:TP=-1.5,afade=t=in:d=0.05,afade=t=out:st=$(echo "${3:-2.5} - 0.3" | bc):d=0.3" \
+    -af "loudnorm=I=${5:--16}:TP=-1.5,afade=t=in:d=0.05,afade=t=out:st=$(echo "${3:-2.5} - 0.3" | bc):d=0.3" \
     "sounds/$2.wav" && echo "  ok  $2.wav"
 }
 
-fetch() { # fetch <url> <outname> <seconds> [start]
+fetch() { # fetch <url> <outname> <seconds> [start] [loudness]
   local tmp
   tmp="$(mktemp -t asciijungle)" || return 1
   if curl -fsSL -A "$UA" -o "$tmp" "$1"; then
-    convert "$tmp" "$2" "${3:-2.5}" "${4:-0}" || echo "  FAIL convert $2" >&2
+    convert "$tmp" "$2" "${3:-2.5}" "${4:-0}" "${5:--16}" || echo "  FAIL convert $2" >&2
   else
     echo "  FAIL download $2 ($1)" >&2
   fi
@@ -59,8 +60,9 @@ fetch "https://upload.wikimedia.org/wikipedia/commons/4/40/Elephant_voice_-_trum
 # CC BY 4.0 (Pawel Fedurek et al., "Pant-hoot call made by a male
 # chimpanzee"). The "ooh-ooh-ah-ah" build-up, 1.5 s in: the loudest part is
 # the scream at the climax, which was too scary. The gibbon call it replaces
-# was scary too.
-fetch "https://upload.wikimedia.org/wikipedia/commons/5/56/Pant-hoot_call_made_by_a_male_chimpanzee.ogg" monkey 2.5 1.5
+# was scary too. Levelled 6 dB under the others: even the build-up is shrill
+# next to the rest.
+fetch "https://upload.wikimedia.org/wikipedia/commons/5/56/Pant-hoot_call_made_by_a_male_chimpanzee.ogg" monkey 2.5 1.5 -22
 # Public domain (த*உழவன், "Lion raring-sound1TamilNadu178"). Zoo lion roar.
 fetch "https://upload.wikimedia.org/wikipedia/commons/7/7d/Lion_raring-sound1TamilNadu178.ogg" lion 2.5 4.0
 # CC BY-SA 4.0 (Anton Baotic, Florian Sicks, Angela S. Stoeger, "Giraffe grunt").
