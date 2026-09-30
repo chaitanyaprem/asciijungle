@@ -7,6 +7,15 @@ Animal keys summon an animal; every other key brings a butterfly, bird,
 flower, rain or rainbow, and never touches the animals. `Ctrl+C` is the
 only way out. No single letter quits, because toddlers find `q`.
 
+![Rain falling in front of a rainbow, with an elephant and a panda below](docs/rainbow.png)
+
+*`r` brings rain, and partway through a rainbow comes out.*
+
+![Clouds, birds and the sun above; a monkey on a vine, a panda, a giraffe and an elephant among the trees and flowers below](docs/jungle.png)
+
+*A few animals, birds, butterflies and flowers. The empty sky in the
+middle of the screen is cut out of this one.*
+
 ## Install
 
 Zero dependencies: you need Node.js 14 or newer and a terminal. Rendering
