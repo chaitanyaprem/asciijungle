@@ -43,6 +43,7 @@ function parseArgs(argv) {
         ANIMALS.map((a) => `  ${a.key}   ${a.name}`).join('\n') + '\n' +
         '  same key again  it hops and calls\n' +
         '  space           a rainbow\n' +
+        '  r               rain, with a rainbow partway through\n' +
         '  other keys      a butterfly, bird or flower\n\n' +
         'Ctrl+C quits. Ctrl+L redraws. No single letter quits, on purpose.\n'
       );

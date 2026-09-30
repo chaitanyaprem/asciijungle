@@ -4,8 +4,8 @@ A jungle in your terminal. Animals wander in, do something, and wander out
 again. Built for a one-year-old to mash the keyboard at.
 
 Animal keys summon an animal; every other key brings a butterfly, bird,
-flower or rainbow, and never touches the animals. `Ctrl+C` is the only
-way out. No single letter quits, because toddlers find `q`.
+flower, rain or rainbow, and never touches the animals. `Ctrl+C` is the
+only way out. No single letter quits, because toddlers find `q`.
 
 ## Install
 
@@ -60,6 +60,7 @@ such as DejaVu Sans Mono or Menlo.
 | `c` | crocodile |
 | the same key again | that animal hops and calls |
 | `space` | a rainbow sweeps across the sky, stays a while, then sweeps away |
+| `r` | rain falls for a while; partway through a rainbow comes out and stays until the rain stops |
 | any other key | a butterfly, bird or flower |
 | `Ctrl+L` | repaint the screen (animals stay) |
 | `Ctrl+C` | quit |
@@ -136,13 +137,14 @@ what the game found.
 
 `tools/fetch-sounds.sh` rebuilds the clips from the Commons originals:
 trimmed to a couple of seconds and levelled so none is much louder than the
-others. The script notes where each clip is cut and why (the monkey is the
-soft build-up of a chimp's call, not the scream).
+others, except the monkey, which sits 6 dB under the rest because its call
+is shrill. The script notes where each clip is cut and why (the monkey is
+the soft build-up of a chimp's call, not the scream).
 
-Treats have no clip, so they say their name instead ("butterfly",
-"rainbow"). The voice is macOS `say`, Windows' built-in speech through
-PowerShell, or `espeak-ng`, `espeak` or `spd-say` on Linux; without one,
-treats are silent. Only one name plays
+Butterflies and birds have no clip, so they say their name instead;
+flowers, rain and the rainbow just appear. The voice is macOS `say`,
+Windows' built-in speech through PowerShell, or `espeak-ng`, `espeak` or
+`spd-say` on Linux; without one, treats are silent. Only one name plays
 at a time. Names pressed while one is talking are skipped, so a held
 key doesn't build up a backlog.
 
@@ -190,7 +192,7 @@ src/
   animal.js          walk → act → leave state machine
   artkit.js          mirror / shiftRow / spliceRow / unsign
   sound.js           audio player discovery, cooldown, playback, speech
-  treats.js          butterflies, birds, flowers, rainbow for other keys
+  treats.js          butterflies, birds, flowers, rain, rainbow for other keys
   random.js          animal registry and population cap
   animals/           one module per species (elephant, giraffe, panda,
                      lion, monkey, hedgehog, crocodile)
