@@ -9,8 +9,12 @@ way out. No single letter quits, because toddlers find `q`.
 
 ## Install
 
-Zero dependencies: you need [Node.js](https://nodejs.org) 14 or newer and a
-terminal. Rendering is raw ANSI escapes.
+Zero dependencies: you need Node.js 14 or newer and a terminal. Rendering
+is raw ANSI escapes.
+
+To install Node.js, follow the official instructions at
+[nodejs.org/en/download](https://nodejs.org/en/download) and pick the LTS
+version. Check it worked with `node --version`.
 
 ### macOS and Linux
 
