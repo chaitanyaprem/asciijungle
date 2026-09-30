@@ -29,7 +29,7 @@ Zero dependencies, plain Node ≥ 14. Rendering is raw ANSI escapes.
 | `h` | hedgehog |
 | `c` | crocodile |
 | the same key again | that animal hops and calls |
-| `space` | a rainbow for a few seconds |
+| `space` | a rainbow sweeps across the sky, stays a while, then sweeps away |
 | any other key | a butterfly, bird or flower |
 | `Ctrl+L` | repaint the screen (animals stay) |
 | `Ctrl+C` | quit |

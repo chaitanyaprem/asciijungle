@@ -69,6 +69,29 @@ function addWaterhole(anim) {
 // the trunk with its neck up has its head among the leaves.
 const GIRAFFE_BROWSE_HEIGHT = 11;
 
+// Trees are see-through only where the air can reach: spaces joined to the
+// top or the sides. The gap inside a trunk opens only at the ground, so it
+// stays solid, and a rainbow behind the tree doesn't show through the bark.
+const OPEN = '\x01';
+function treeShape(lines) {
+  const h = lines.length;
+  const w = Math.max(...lines.map((l) => l.length));
+  const g = lines.map((l) => l.padEnd(w).split(''));
+  const q = [];
+  const open = (y, x) => {
+    if (y < 0 || y >= h || x < 0 || x >= w || g[y][x] !== ' ') return;
+    g[y][x] = OPEN;
+    q.push([y, x]);
+  };
+  for (let x = 0; x < w; x++) open(0, x);
+  for (let y = 0; y < h; y++) { open(y, 0); open(y, w - 1); }
+  while (q.length) {
+    const [y, x] = q.pop();
+    open(y + 1, x); open(y - 1, x); open(y, x + 1); open(y, x - 1);
+  }
+  return g.map((r) => r.join('')).join('\n');
+}
+
 function addTallTree(anim) {
   // Crown sits at giraffe-browse height so the muzzle lands in leaves, not
   // bark. Leftover air on a tall terminal is canopy's job, not a 20-row pole.
@@ -94,7 +117,7 @@ function addTallTree(anim) {
   anim.newEntity({
     name: 'tree',
     type: 'scenery',
-    shape: lines.join('\n'),
+    shape: treeShape(lines),
     color: mask.join('\n'),
     position: [
       anim.world.features.treeX - 6,
@@ -102,7 +125,7 @@ function addTallTree(anim) {
       anim.world.z.scenery,
     ],
     defaultColor: 'g',
-    autoTrans: true,
+    transparent: OPEN,
   });
   addSwing(anim, anim.world.features.treeX, anim.world.groundY - lines.length + 2);
 }
@@ -259,11 +282,11 @@ function addGroveTree(anim, x, totalH) {
   anim.newEntity({
     name: `grove-${x}`,
     type: 'scenery',
-    shape: lines.join('\n'),
+    shape: treeShape(lines),
     color: mask.join('\n'),
     position: [x - Math.floor(w / 2), anim.world.groundY - lines.length, anim.world.z.scenery],
     defaultColor: 'g',
-    autoTrans: true,
+    transparent: OPEN,
   });
   addSwing(anim, x, anim.world.groundY - lines.length + 2);
 }

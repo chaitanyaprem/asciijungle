@@ -116,43 +116,90 @@ function addFlower(anim) {
 }
 
 // ──────────────────────────── rainbow ────────────────────────────
-// Concentric bands on an ellipse; terminal cells are about 2.2x taller than
-// wide, so the vertical radius is squashed to keep it round on screen.
-function rainbowArt(width) {
-  const bands = 'RYGBM';
-  const r = Math.floor(width / 2);
-  const ry = Math.ceil(r / 2.2);
+// Nearly screen-wide, with its feet on the ground behind the trees. It
+// sweeps on from one side over SWEEP_TICKS, stays RAINBOW_MS, then sweeps
+// off the same way.
+const BANDS = 'RYGCBM';
+const SWEEP_TICKS = 12;
+
+// Concentric half-ellipses, each band one step in from the last. A cell is
+// about 2.2x taller than wide, so a band is `t` rows thick at the top and
+// 2.2t columns at the sides: the same thickness to the eye all the way round.
+function rainbowArt(width, height) {
+  const rx = (width - 1) / 2;
+  const ry = height - 1;
+  const t = Math.max(1, ry / 16);
+  const inside = (dx, dy, k) => {
+    const a = rx - k * t * 2.2, b = ry - k * t;
+    return a > 0 && b > 0 && (dx / a) ** 2 + (dy / b) ** 2 <= 1;
+  };
   const lines = [], mask = [];
-  for (let row = 0; row <= ry; row++) {
+  for (let row = 0; row < height; row++) {
     let l = '', m = '';
-    for (let col = 0; col < 2 * r + 1; col++) {
-      const dx = (col - r) / 2.2, dy = ry - row;
-      const b = Math.floor(ry + 0.5 - Math.sqrt(dx * dx + dy * dy));
-      if (b >= 0 && b < bands.length) { l += '#'; m += bands[b]; } else { l += ' '; m += ' '; }
+    for (let col = 0; col < width; col++) {
+      const dx = col - rx, dy = ry - row + 0.5;
+      let band = -1;
+      for (let k = 0; k < BANDS.length && inside(dx, dy, k); k++) band = k;
+      if (band >= 0 && !inside(dx, dy, BANDS.length)) { l += '█'; m += BANDS[band]; } else { l += ' '; m += ' '; }
     }
     lines.push(l);
     mask.push(m);
   }
-  return { shape: lines.join('\n'), color: mask.join('\n') };
+  return { lines, color: mask.join('\n') };
+}
+
+// Frame k of a sweep shows (or, going off, hides) the first k/SWEEP_TICKS
+// of the columns, counted from the side it starts on.
+function sweepFrames(lines, fromLeft) {
+  const w = lines[0].length;
+  const cut = (k, show) => lines.map((l) => [...l].map((c, i) => {
+    const pos = fromLeft ? i : w - 1 - i;
+    const lit = pos < Math.ceil((k / SWEEP_TICKS) * w);
+    return lit === show ? c : ' ';
+  }).join('')).join('\n');
+  const frames = [];
+  for (let k = 0; k <= SWEEP_TICKS; k++) frames.push(cut(k, true));   // on
+  for (let k = 0; k <= SWEEP_TICKS; k++) frames.push(cut(k, false));  // off
+  return frames;
+}
+
+function sweep(e) {
+  if (e.phase === 'on') {
+    e.k += 1;
+    if (e.k >= SWEEP_TICKS) { e.phase = 'hold'; e.until = Date.now() + RAINBOW_MS; }
+  } else if (e.phase === 'hold') {
+    if (Date.now() >= e.until) { e.phase = 'off'; e.k = 0; }
+  } else {
+    e.k += 1;
+    if (e.k > SWEEP_TICKS) { e.alive = false; return; }
+  }
+  e.physFrame = e.phase === 'off' ? SWEEP_TICKS + 1 + e.k : e.k;
 }
 
 function addRainbow(anim) {
   // Another press keeps the one that's up for longer, rather than stacking.
   const up = treats(anim, 'rainbow')[0];
-  if (up) { up.dieTime = Date.now() + RAINBOW_MS; return true; }
-  const width = Math.max(20, Math.min(44, anim.width() - 30));
-  const art = rainbowArt(width);
+  if (up) {
+    if (up.phase !== 'on') { up.phase = 'hold'; up.k = SWEEP_TICKS; up.until = Date.now() + RAINBOW_MS; }
+    return true;
+  }
+  const width = Math.max(20, anim.width() - 4);
+  const groundY = anim.world.groundY;
+  const height = Math.max(6, Math.min(Math.round(width / 2 / 2.2), groundY - 1));
+  const art = rainbowArt(width, height);
   const e = anim.newEntity({
     name: 'treat-rainbow',
     type: 'scenery',
-    shape: art.shape,
+    shape: sweepFrames(art.lines, Math.random() < 0.5),
     color: art.color,
-    // Behind the trees and sun, in front of the sky only.
-    position: [Math.floor((anim.width() - width) / 2), 1, DEPTH.canopy + 5],
-    dieTime: Date.now() + RAINBOW_MS,
+    // Feet on the ground line; behind the trees and sun, in front of the sky.
+    position: [Math.floor((anim.width() - width) / 2), groundY - height, DEPTH.canopy + 5],
+    callback: sweep,
     autoTrans: true,
   });
   e.treat = 'rainbow';
+  e.phase = 'on';
+  e.k = 0;
   return true;
 }
 
