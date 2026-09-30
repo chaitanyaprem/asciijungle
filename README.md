@@ -28,6 +28,7 @@ Zero dependencies, plain Node ≥ 14. Rendering is raw ANSI escapes.
 | `m` | monkey |
 | `h` | hedgehog |
 | `c` | crocodile |
+| the same key again | that animal hops and calls |
 | `space` | a rainbow for a few seconds |
 | any other key | a butterfly, bird or flower |
 | `Ctrl+L` | repaint the screen (animals stay) |
@@ -70,19 +71,24 @@ Roughly one animal in five walks straight past without stopping. That variety
 matters more than it sounds. If every elephant stopped at every waterhole the
 scene would feel like a machine rather than a jungle.
 
-A key adds an animal until the path is full. After that the key does
-nothing until someone walks off. Nobody on screen is ever swapped out for
-a newcomer. The path holds one animal per 24 columns of terminal, between
-2 and 4; monkeys swing overhead and have their own limit of 2.
+An animal key summons that animal if it isn't on screen and the path has
+room. If it's already on screen, it hops and calls instead, so a key
+always does something once its animal is out, even on a full path.
+Nobody on screen is ever swapped out for a newcomer. The path holds one
+animal per 24 columns of terminal, between 2 and 4; monkeys swing
+overhead and have their own limit of 2.
 
 Species are chosen by picking whichever is currently rarest on screen, not by
 an independent random draw. A uniform draw looks fair and isn't: with three
 species and three opening spawns it produced one of each only 22% of the time,
 and three of the *same* species 11% of the time.
 
-A summoned animal that fits appears in full at the screen edge straight
-away. The opening cast starts mid-screen. Only ambient arrivals walk in from off-screen,
-which takes 12-20 seconds and is fine when nobody is waiting on it.
+A summoned animal that fits appears at the screen edge straight away. About
+a third of arrivals play peekaboo first: the head pokes in, ducks back out,
+then pokes in further with the animal's call before it walks in. Pressing
+its key during the hiding skips to that last peek. The opening cast starts
+mid-screen. Only ambient arrivals walk in from off-screen, which takes
+12-20 seconds and is fine when nobody is waiting on it.
 
 ## Sound
 

@@ -9,7 +9,7 @@
 const { Animation } = require('./src/engine');
 const { buildWorld, canAdd, occupants, maxAnimals } = require('./src/world');
 const { addScenery } = require('./src/scenery');
-const { randomAnimal, summonByKey, ANIMALS, BY_KEY } = require('./src/random');
+const { randomAnimal, pressAnimal, ANIMALS, BY_KEY } = require('./src/random');
 const { addTreat } = require('./src/treats');
 const sound = require('./src/sound');
 
@@ -40,6 +40,7 @@ function parseArgs(argv) {
         '  --check-sound  report the audio player and sound files, then exit\n\n' +
         'Keys:\n' +
         ANIMALS.map((a) => `  ${a.key}   ${a.name}`).join('\n') + '\n' +
+        '  same key again  it hops and calls\n' +
         '  space           a rainbow\n' +
         '  other keys      a butterfly, bird or flower\n\n' +
         'Ctrl+C quits. Ctrl+L redraws. No single letter quits, on purpose.\n'
@@ -119,13 +120,14 @@ function main() {
     // ('\x1b[C') must not summon a crocodile. The whole sequence is one key.
     if (raw.startsWith('\x1b')) { if (opts.calm) addTreat(anim, raw); return; }
 
-    // force + atEdge: if there is a free seat, the animal is visible in full
-    // the instant the key goes down rather than creeping in one column at a
-    // time. A full path ignores the key; nobody on screen gets swapped out.
+    // force + atEdge: if there is a free seat, the animal shows up at the
+    // edge the instant the key goes down (in full, or peeking) rather than
+    // creeping in one column at a time. Nobody on screen gets swapped out;
+    // see pressAnimal for what a key does when its animal is already here.
     const summonOpts = { announce: true, force: true, atEdge: true };
     // Fast mashing can deliver several keys in one chunk; take each one.
     for (const k of raw.toLowerCase()) {
-      if (BY_KEY.has(k)) summonByKey(anim, k, summonOpts);
+      if (BY_KEY.has(k)) pressAnimal(anim, k, summonOpts);
       else if (opts.calm) addTreat(anim, k);
       else randomAnimal(anim, summonOpts);
     }

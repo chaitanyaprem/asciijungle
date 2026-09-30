@@ -7,6 +7,7 @@ const { addLion } = require('./animals/lion');
 const { addMonkey } = require('./animals/monkey');
 const { addHedgehog } = require('./animals/hedgehog');
 const { addCrocodile } = require('./animals/crocodile');
+const { react, hurryPeek } = require('./animal');
 
 // Registry of everything that can wander in. Adding an animal means adding one
 // line here plus its module — nothing else in the app needs to know about it.
@@ -47,14 +48,26 @@ function randomAnimal(anim, opts) {
   return a.add(anim, opts);
 }
 
-function summonByKey(anim, key, opts) {
+// An animal key summons that animal if it isn't on screen; if it is,
+// everyone of that kind hops and calls. So once an animal is out, its key
+// always does something, even on a full path.
+function pressAnimal(anim, key, opts) {
   const a = BY_KEY.get(key);
   if (!a) return null;
-  return a.add(anim, opts);
+  const here = anim.entities.filter((e) =>
+    e.alive && e.type === a.name && e.entered && !e.peek);
+  if (!here.length) {
+    // One peeking in from the edge: hurry it to its last peek.
+    const peeking = anim.entities.find((e) => e.alive && e.type === a.name && e.peek);
+    if (peeking) return hurryPeek(peeking) ? peeking : null;
+    return a.add(anim, opts);
+  }
+  for (const e of here) react(e);
+  return here[0];
 }
 
 function count(anim) {
   return anim.entities.filter((e) => e.alive && e.type !== 'scenery').length;
 }
 
-module.exports = { ANIMALS, BY_KEY, typeCounts, randomAnimal, summonByKey, count };
+module.exports = { ANIMALS, BY_KEY, typeCounts, randomAnimal, pressAnimal, count };

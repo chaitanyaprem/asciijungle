@@ -22,6 +22,15 @@ const WALK = 'walk';
 const ACT = 'act';
 const LEAVE = 'leave';
 
+// Peekaboo: some arrivals poke their head in from the edge, duck back out,
+// then peek again with their call before walking in. Each step is
+// [ticks, share of the body showing]; 0 is hidden.
+const PEEK_CHANCE = 0.35;
+const PEEK_STEPS = [[6, 0.3], [5, 0], [7, 0.5]];
+
+// A reaction to a repeat keypress: a two-row hop over HOP_TICKS.
+const HOP_TICKS = 6;
+
 function prepare(spec) {
   const p = {};
   for (const key of ['walkRight', 'walkLeft', 'actRight', 'actLeft']) {
@@ -166,6 +175,11 @@ function spawn(anim, spec, opts = {}) {
     if (startX == null) return null;
   }
 
+  // Canopy swingers arrive already hanging, and the opening cast is placed
+  // mid-screen, so neither peeks.
+  const peek = lane === 'path' && !opts.onScreen && Math.random() < PEEK_CHANCE;
+  if (peek) startX = facingRight ? -w : anim.width();
+
   let targetX = null;
   if (stopX != null) {
     // Full body-width gap is the onScreen walk-up. At the edge a nearby
@@ -198,7 +212,7 @@ function spawn(anim, spec, opts = {}) {
     defaultColor: spec.defaultColor || 'w',
     shade: null,
     dieOffscreen: false,
-    callback: step,
+    callback: stepAndHop,
   });
 
   e.spec = spec;
@@ -212,7 +226,8 @@ function spawn(anim, spec, opts = {}) {
   e.targetX = targetX;
   e.actLeft = 0;
   e.baseDx = dx;
-  e.entered = !!(opts.onScreen || opts.atEdge);
+  e.entered = !peek && !!(opts.onScreen || opts.atEdge);
+  e.peek = peek ? { i: 0, t: 0, fromX: startX } : null;
   useArt(e, set);
   e.physX = startX;
   e.x = startX;
@@ -230,8 +245,62 @@ function spawn(anim, spec, opts = {}) {
   return e;
 }
 
+// Returns true while the peek is still running.
+function peekStep(e, anim) {
+  const p = e.peek;
+  const [ticks, share] = PEEK_STEPS[p.i];
+  const w = e.width();
+  const showing = Math.round(w * share);
+  // The head leads, so showing N columns means the front N.
+  e.physX = e.facingRight ? p.fromX + showing : p.fromX - showing;
+  e.x = Math.floor(e.physX);
+  if (p.t === 0 && p.i === PEEK_STEPS.length - 1 && e.spec.sound) sound.play(e.spec.sound);
+  p.t += 1;
+  if (p.t >= ticks) {
+    p.i += 1;
+    p.t = 0;
+    if (p.i >= PEEK_STEPS.length) {
+      e.peek = null;
+      e.entered = true;
+      return false;
+    }
+  }
+  return true;
+}
+
+// A key pressed mid-peek jumps to the last, bigger peek (with its call)
+// instead of making a toddler wait out the hiding.
+function hurryPeek(e) {
+  const last = PEEK_STEPS.length - 1;
+  if (!e.peek || e.peek.i === last) return false;
+  e.peek.i = last;
+  e.peek.t = 0;
+  return true;
+}
+
+function react(e) {
+  e.hopLeft = HOP_TICKS;
+  if (e.spec && e.spec.sound) sound.play(e.spec.sound);
+}
+
+// Lift e off wherever step() put it. Runs after step so it never fights the
+// walk, the act or a monkey's leap arc; the last tick lands back on physY.
+function hop(e) {
+  if (!e.hopLeft) return;
+  e.hopLeft -= 1;
+  const t = 1 - e.hopLeft / HOP_TICKS;
+  e.y = Math.floor(e.physY) - Math.round(Math.sin(t * Math.PI) * 2);
+}
+
+function stepAndHop(e, anim) {
+  step(e, anim);
+  hop(e);
+}
+
 function step(e, anim) {
   const spec = e.spec;
+
+  if (e.peek && peekStep(e, anim)) return;
 
   if (e.state === ACT) {
     e.physFrame += spec.actFrameSpeed || 0.12;
@@ -380,4 +449,4 @@ function step(e, anim) {
   else if (e.entered) e.alive = false;
 }
 
-module.exports = { spawn, WALK, ACT, LEAVE };
+module.exports = { spawn, react, hurryPeek, WALK, ACT, LEAVE };
