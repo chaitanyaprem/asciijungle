@@ -74,11 +74,14 @@ such as DejaVu Sans Mono or Menlo.
 | `r` | rain falls for a while; partway through a rainbow comes out and stays until the rain stops |
 | `←` `→` while it rains | the wind leans the rain that way, a step a press (two at most); the other arrow straightens it |
 | any other key | a butterfly, bird or flower |
+| a tap, with `--touch` | the same as any other key |
 | `Ctrl+L` | repaint the screen (animals stay) |
 | `Ctrl+C` | quit |
 
 Flags: `--any-key` (non-animal keys summon a random animal instead of a
-treat), `--mute` (no clips or spoken names), `--check-sound`.
+treat), `--touch` (a tap on the screen does that too; taps inside a third
+of a second count as one), `--mute` (no clips or spoken names),
+`--check-sound`.
 
 The path counts treats as scenery, so they never take an animal's seat.
 At most six butterflies and birds fly at once; past that a key grows a
