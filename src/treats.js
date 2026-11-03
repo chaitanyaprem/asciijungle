@@ -360,6 +360,15 @@ function blow(anim, key) {
   return true;
 }
 
+// A sideways swipe leans the rain all the way that way. dir is negative for
+// left. Nothing happens when it is not raining, so the swipe is not a summon.
+function blowToward(anim, dir) {
+  const rain = treats(anim, 'rain')[0];
+  if (!rain || !dir) return false;
+  rain.windSteps = (dir < 0 ? -1 : 1) * WIND_STEPS;
+  return true;
+}
+
 // key is one character, or a whole escape sequence (arrow keys).
 function addTreat(anim, key) {
   if (blow(anim, key)) return;
@@ -374,4 +383,4 @@ function addTreat(anim, key) {
   if (!QUIET.has(kind.name)) sound.say(kind.name);
 }
 
-module.exports = { addTreat, rainbowArt };
+module.exports = { addTreat, rainbowArt, blowToward };

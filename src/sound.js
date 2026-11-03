@@ -95,7 +95,11 @@ function play(name) {
   if (running.size >= MAX_CONCURRENT) return;
 
   const file = findFile(name);
-  if (!file) return;
+  // Turtle has no clip. --touch says the name; a normal run stays quiet.
+  if (!file) {
+    if (speakMissing) say(name);
+    return;
+  }
 
   lastPlayed.set(name, now);
   try {
@@ -144,6 +148,10 @@ function say(text) {
 function setEnabled(v) { enabled = !!v; }
 function isEnabled() { return enabled; }
 
+// A missing clip is silent unless --touch asked for the spoken name.
+let speakMissing = false;
+function setSpeakMissing(on) { speakMissing = !!on; }
+
 // Reported by --check-sound so you can see what's wired up without launching.
 function status() {
   const p = resolvePlayer();
@@ -161,4 +169,4 @@ function stopAll() {
   if (speaking) { try { speaking.kill(); } catch {} }
 }
 
-module.exports = { play, say, setEnabled, isEnabled, status, stopAll, SOUND_DIR };
+module.exports = { play, say, setEnabled, isEnabled, setSpeakMissing, status, stopAll, SOUND_DIR };

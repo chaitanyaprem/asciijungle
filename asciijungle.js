@@ -11,14 +11,21 @@ const { buildWorld, canAdd, occupants, maxAnimals } = require('./src/world');
 const { resettle } = require('./src/animal');
 const { addScenery } = require('./src/scenery');
 const { randomAnimal, pressAnimal, ANIMALS, BY_KEY } = require('./src/random');
-const { addTreat } = require('./src/treats');
+const { addTreat, blowToward } = require('./src/treats');
+const fs = require('fs');
 const { take } = require('./src/input');
+const { tapAnimalKey } = require('./src/touch');
+const { setMild } = require('./src/colors');
+const { spec: turtleSpec } = require('./src/animals/turtle');
 const sound = require('./src/sound');
 
 const TICK_SPEEDS = [400, 300, 220, 160, 120, 90];
 const DEFAULT_SPEED = 2; // 220 ms — a slow amble, which is the point
 // A palm on the glass is many presses. Count them as one tap.
 const TAP_GAP_MS = 300;
+// Termux reports a finger press, not the sideways drag, so a helper on the
+// tablet appends one L or R per swipe. No file means swipes do nothing.
+const WIND_FILE = process.env.JUNGLE_WIND || '/data/local/tmp/jungle-wind';
 
 function parseArgs(argv) {
   const opts = { calm: true, mute: false, touch: false, speed: DEFAULT_SPEED };
@@ -41,7 +48,8 @@ function parseArgs(argv) {
       process.stdout.write(
         'Usage: asciijungle.js [--any-key] [--touch] [--mute] [--check-sound]\n\n' +
         '  --any-key      other keys summon a random animal instead of a treat\n' +
-        '  --touch        a tap does what an other key does\n' +
+        '  --touch        lower-screen taps pick an animal; sky taps bring a treat;\n' +
+        '                 a sideways swipe leans the rain\n' +
         '  --mute         no sound or spoken names\n' +
         '  --check-sound  report the audio player and sound files, then exit\n\n' +
         'Keys:\n' +
@@ -50,8 +58,11 @@ function parseArgs(argv) {
         '  space           a rainbow\n' +
         '  r               rain, with a rainbow partway through\n' +
         '  left/right      while it rains, the wind leans it that way\n' +
+        '  swipe left/right, with --touch   the rain leans that way\n' +
         '  other keys      a butterfly, bird or flower\n' +
-        '  a tap           the same as an other key, with --touch\n\n' +
+        '  a tap on an animal, with --touch   that animal hops and calls\n' +
+        '  a tap on the ground   the animal for that part of the screen, left to right\n' +
+        '  a tap on the sky      a butterfly, bird or flower\n\n' +
         'Ctrl+C quits. Ctrl+L redraws. No single letter quits, on purpose.\n'
       );
       process.exit(0);
@@ -64,6 +75,11 @@ function parseArgs(argv) {
 }
 
 let touchOn = false;
+
+function keyOfType(type) {
+  const a = ANIMALS.find((x) => x.name === type);
+  return a ? a.key : null;
+}
 
 function setupTerminal(touch) {
   process.stdout.write('\x1b[?1049h'); // alternate screen buffer
@@ -103,6 +119,12 @@ function quit(msg) {
 function main() {
   const opts = parseArgs(process.argv);
   sound.setEnabled(!opts.mute);
+  // Tablet look. A desktop run keeps the 16 colours and a quiet turtle.
+  if (opts.touch) {
+    setMild(true);
+    turtleSpec.sound = 'turtle';
+    sound.setSpeakMissing(true);
+  }
 
   setupTerminal(opts.touch);
   process.on('exit', restoreTerminal);
@@ -149,6 +171,27 @@ function main() {
     else randomAnimal(anim, summonOpts);
   }
 
+  // The drawn cells of an animal, skipping the blank inside its picture.
+  // A tall giraffe reaches into the sky, and tapping its head should still
+  // be the giraffe rather than a butterfly.
+  function animalKeyAt(col, row) {
+    let hit = null;
+    let bestZ = Infinity;
+    for (const e of anim.entities) {
+      if (!e.alive || !e.spec) continue;
+      const key = keyOfType(e.type);
+      if (!key) continue;
+      const f = e.frame;
+      if (!f || col < e.x || row < e.y || col >= e.x + f.width || row >= e.y + f.height) continue;
+      const line = f.lines[row - e.y] || '';
+      const ch = line[col - e.x];
+      if (!ch || ch === '\0' || ch === ' ') continue;
+      const z = e.z == null ? 0 : e.z;
+      if (z < bestZ) { bestZ = z; hit = key; }
+    }
+    return hit;
+  }
+
   process.stdin.on('data', (chunk) => {
     pending += chunk.toString();
     const pulled = take(pending);
@@ -163,7 +206,13 @@ function main() {
         const now = Date.now();
         if (now - lastTap < TAP_GAP_MS) continue;
         lastTap = now;
-        unmatched();
+        const under = animalKeyAt(ev.col - 1, ev.row - 1);
+        if (under) pressAnimal(anim, under, summonOpts);
+        else {
+          const zone = tapAnimalKey(ANIMALS, ev.col, ev.row, anim.width(), anim.height());
+          if (zone) pressAnimal(anim, zone, summonOpts);
+          else unmatched();
+        }
         continue;
       }
       // Arrow and function keys arrive as escape sequences; their letters
@@ -178,7 +227,30 @@ function main() {
 
   process.stdout.on('resize', () => { rebuild = true; });
 
+  // Read and clear even when it is dry, so a swipe during a lull does not
+  // lean the next rainfall.
+  function takeWind() {
+    let fd;
+    try { fd = fs.openSync(WIND_FILE, 'r+'); } catch { return; }
+    try {
+      const buf = Buffer.alloc(64);
+      const n = fs.readSync(fd, buf, 0, buf.length, 0);
+      if (!n) return;
+      fs.ftruncateSync(fd, 0);
+      const text = buf.toString('utf8', 0, n);
+      for (const ch of text) {
+        if (ch === 'L') blowToward(anim, -1);
+        else if (ch === 'R') blowToward(anim, 1);
+      }
+    } catch {
+      // The helper can rewrite the file between the read and the clear.
+    } finally {
+      try { fs.closeSync(fd); } catch {}
+    }
+  }
+
   const tick = () => {
+    if (opts.touch) takeWind();
     if (rebuild) { build(true); rebuild = false; return; }
 
     // Quiet refill: keep at least a couple of animals wandering if nobody

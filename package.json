@@ -6,7 +6,7 @@
   "bin": { "asciijungle": "./asciijungle.js" },
   "scripts": {
     "start": "node asciijungle.js",
-    "check": "node -c asciijungle.js && for f in src/*.js src/animals/*.js; do node -c \"$f\" || exit 1; done && echo ok",
+    "check": "node -c asciijungle.js && for f in src/*.js src/animals/*.js; do node -c \"$f\" || exit 1; done && node tools/input-test.js && node tools/touch-test.js && node tools/wind-test.js && node tools/color-test.js",
     "sounds": "./tools/fetch-sounds.sh"
   },
   "keywords": ["ascii", "terminal", "animation", "jungle", "animals", "kids"],

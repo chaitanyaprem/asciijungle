@@ -73,14 +73,20 @@ such as DejaVu Sans Mono or Menlo.
 | `space` | a rainbow sweeps across the sky, stays a while, then sweeps away |
 | `r` | rain falls for a while; partway through a rainbow comes out and stays until the rain stops |
 | `←` `→` while it rains | the wind leans the rain that way, a step a press (two at most); the other arrow straightens it |
+| a sideways swipe, with `--touch`, while it rains | the rain leans that way |
 | any other key | a butterfly, bird or flower |
-| a tap, with `--touch` | the same as any other key |
+| a tap on an animal, with `--touch` | that animal hops and calls |
+| a tap on the ground, with `--touch` | the animal for that part of the screen, left to right: elephant, giraffe, panda, lion, monkey, hedgehog, crocodile, frog, turtle |
+| a tap on the sky, with `--touch` | a butterfly, bird or flower |
 | `Ctrl+L` | repaint the screen (animals stay) |
 | `Ctrl+C` | quit |
 
 Flags: `--any-key` (non-animal keys summon a random animal instead of a
-treat), `--touch` (a tap on the screen does that too; taps inside a third
-of a second count as one), `--mute` (no clips or spoken names),
+treat), `--touch` (the ground is nine columns, one animal each, left to
+right; a tap on an animal calls that one; a tap on the sky is
+still a treat; taps inside a third of a second count as one; a sideways
+swipe leans the rain), `--mute`
+(no clips or spoken names),
 `--check-sound`.
 
 The path counts treats as scenery, so they never take an animal's seat.
